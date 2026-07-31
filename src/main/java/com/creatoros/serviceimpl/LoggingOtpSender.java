@@ -1,9 +1,10 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.OtpPurpose;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import com.creatoros.service.OtpSender;
 
 /**
  * Development delivery: prints the code to the server log.

@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.auth.AuthResponse;
 import com.creatoros.dto.auth.LoginRequest;
@@ -13,7 +13,7 @@ import com.creatoros.entity.Role;
 import com.creatoros.exception.AccountNotVerifiedException;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.InvalidCredentialsException;
-import com.creatoros.repository.CreatorRepository;
+import com.creatoros.dao.CreatorDao;
 import com.creatoros.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,13 +25,15 @@ import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Optional;
+import com.creatoros.service.AuthService;
+import com.creatoros.service.OtpService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final CreatorRepository creatorRepository;
+    private final CreatorDao creatorDao;
     private final OtpService        otpService;
     private final PasswordEncoder   passwordEncoder;
     private final JwtService        jwtService;
@@ -42,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
     public void signup(SignupRequest request) {
         String email = normalizeEmail(request.email());
 
-        Optional<Creator> existing = creatorRepository.findByEmailIgnoreCase(email);
+        Optional<Creator> existing = creatorDao.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
             Creator creator = existing.get();
             // A half-finished signup should not be a dead end - refresh the
@@ -51,7 +53,7 @@ public class AuthServiceImpl implements AuthService {
                 creator.setName(request.name());
                 creator.setPhone(request.phone());
                 creator.setPasswordHash(passwordEncoder.encode(request.password()));
-                creatorRepository.save(creator);
+                creatorDao.save(creator);
                 otpService.issue(creator, OtpPurpose.SIGNUP);
                 return;
             }
@@ -63,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
                 .platforms(new LinkedHashSet<>()).gstRegistered(false).monthlyRevenueEstimate(BigDecimal.ZERO).bankDetails(new BankDetails())
                 .onboardingCompleted(false).build();
 
-        creatorRepository.save(creator);
+        creatorDao.save(creator);
         otpService.issue(creator, OtpPurpose.SIGNUP);
         log.info("Registered creator {} ({})", creator.getId(), email);
     }
@@ -80,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
         otpService.verify(creator, OtpPurpose.SIGNUP, request.code());
 
         creator.setStatus(CreatorStatus.ACTIVE);
-        creatorRepository.save(creator);
+        creatorDao.save(creator);
 
         return buildAuthResponse(creator);
     }
@@ -98,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional(readOnly = true)
     public AuthResponse login(LoginRequest request) {
-        Creator creator = creatorRepository.findByEmailIgnoreCase(normalizeEmail(request.email())).orElseThrow(InvalidCredentialsException::new);
+        Creator creator = creatorDao.findByEmailIgnoreCase(normalizeEmail(request.email())).orElseThrow(InvalidCredentialsException::new);
 
         if (!passwordEncoder.matches(request.password(), creator.getPasswordHash())) {
             throw new InvalidCredentialsException();
@@ -118,7 +120,7 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public void forgotPassword(String email) {
         // Never reveal whether the address is registered.
-        creatorRepository.findByEmailIgnoreCase(normalizeEmail(email)).ifPresentOrElse(
+        creatorDao.findByEmailIgnoreCase(normalizeEmail(email)).ifPresentOrElse(
                 creator -> otpService.issue(creator, OtpPurpose.PASSWORD_RESET),
                 () -> log.info("Password reset requested for unregistered email {}", email));
     }
@@ -136,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
         if (creator.getStatus() == CreatorStatus.PENDING) {
             creator.setStatus(CreatorStatus.ACTIVE);
         }
-        creatorRepository.save(creator);
+        creatorDao.save(creator);
 
         return buildAuthResponse(creator);
     }
@@ -147,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private Creator requireCreator(String email) {
-        return creatorRepository.findByEmailIgnoreCase(normalizeEmail(email))
+        return creatorDao.findByEmailIgnoreCase(normalizeEmail(email))
                 .orElseThrow(() -> new BadRequestException("No account found for this email.", "ACCOUNT_NOT_FOUND"));
     }
 
@@ -172,7 +174,7 @@ public class AuthServiceImpl implements AuthService {
 
         String candidate = "@" + base;
         int suffix = 1;
-        while (creatorRepository.existsByHandle(candidate)) {
+        while (creatorDao.existsByHandle(candidate)) {
             candidate = "@" + base + suffix++;
         }
         return candidate;

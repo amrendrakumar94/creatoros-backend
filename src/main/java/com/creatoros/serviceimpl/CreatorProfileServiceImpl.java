@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.BankDetailsDto;
 import com.creatoros.dto.CreatorProfileDto;
@@ -7,7 +7,7 @@ import com.creatoros.dto.UpdateCreatorProfileRequest;
 import com.creatoros.entity.BankDetails;
 import com.creatoros.entity.Creator;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.repository.CreatorRepository;
+import com.creatoros.dao.CreatorDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,13 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.LinkedHashSet;
 import java.util.function.Consumer;
+import com.creatoros.service.CreatorProfileService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CreatorProfileServiceImpl implements CreatorProfileService {
 
-    private final CreatorRepository creatorRepository;
+    private final CreatorDao creatorDao;
     private final CreatorMapper     creatorMapper;
 
     @Override
@@ -72,7 +73,7 @@ public class CreatorProfileServiceImpl implements CreatorProfileService {
             applyBankDetails(creator, request.bankDetails());
         }
 
-        creatorRepository.save(creator);
+        creatorDao.save(creator);
         log.debug("Updated profile for creator {}", creatorId);
 
         return creatorMapper.toProfileDto(creator);
@@ -99,6 +100,6 @@ public class CreatorProfileServiceImpl implements CreatorProfileService {
     }
 
     private Creator requireCreator(Long creatorId) {
-        return creatorRepository.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
+        return creatorDao.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
     }
 }

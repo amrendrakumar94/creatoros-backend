@@ -1,11 +1,11 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.notification.NotificationDto;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Notification;
 import com.creatoros.entity.NotificationType;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.repository.NotificationRepository;
+import com.creatoros.dao.NotificationDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,19 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import com.creatoros.service.NotificationService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationDao notificationDao;
     private final DomainMapper domainMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<NotificationDto> listForCreator(Long creatorId) {
-        return notificationRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
+        return notificationDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
                 .map(domainMapper::toNotificationDto)
                 .toList();
     }
@@ -33,24 +34,24 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public NotificationDto markRead(Long creatorId, Long notificationId) {
-        Notification notification = notificationRepository.findByIdAndCreatorId(notificationId, creatorId)
+        Notification notification = notificationDao.findByIdAndCreatorId(notificationId, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Notification", notificationId));
         notification.setRead(true);
-        return domainMapper.toNotificationDto(notificationRepository.save(notification));
+        return domainMapper.toNotificationDto(notificationDao.save(notification));
     }
 
     @Override
     @Transactional
     public int markAllRead(Long creatorId) {
-        return notificationRepository.markAllRead(creatorId);
+        return notificationDao.markAllRead(creatorId);
     }
 
     @Override
     @Transactional
     public void delete(Long creatorId, Long notificationId) {
-        Notification notification = notificationRepository.findByIdAndCreatorId(notificationId, creatorId)
+        Notification notification = notificationDao.findByIdAndCreatorId(notificationId, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Notification", notificationId));
-        notificationRepository.delete(notification);
+        notificationDao.delete(notification);
     }
 
     @Override
@@ -66,7 +67,7 @@ public class NotificationServiceImpl implements NotificationService {
                 .amount(amount)
                 .read(false)
                 .build();
-        notificationRepository.save(notification);
+        notificationDao.save(notification);
         log.debug("Recorded {} notification for creator {}", type, creator.getId());
     }
 }

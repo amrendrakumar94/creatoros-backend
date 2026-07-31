@@ -1,20 +1,25 @@
-package com.creatoros.repository;
+package com.creatoros.dao;
 
 import com.creatoros.entity.Invoice;
 import com.creatoros.entity.InvoiceStatus;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
+public interface InvoiceDao {
+
+    Invoice save(Invoice invoice);
+
+    List<Invoice> saveAll(Collection<Invoice> invoices);
+
+    /** Cascades to invoice items. */
+    void delete(Invoice invoice);
 
     List<Invoice> findByCreatorIdOrderByCreatedAtDesc(Long creatorId);
 
+    /** Scoped lookup: an id belonging to another creator simply is not found. */
     Optional<Invoice> findByIdAndCreatorId(Long id, Long creatorId);
 
     long countByCreatorId(Long creatorId);

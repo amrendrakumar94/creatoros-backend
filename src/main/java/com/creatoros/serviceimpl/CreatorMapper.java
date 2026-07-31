@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.BankDetailsDto;
 import com.creatoros.dto.CreatorProfileDto;

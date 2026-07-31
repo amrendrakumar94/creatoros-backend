@@ -1,9 +1,9 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.entity.Invoice;
 import com.creatoros.entity.InvoiceStatus;
 import com.creatoros.entity.NotificationType;
-import com.creatoros.repository.InvoiceRepository;
+import com.creatoros.dao.InvoiceDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,6 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import com.creatoros.service.InvoiceOverdueService;
+import com.creatoros.service.NotificationService;
 
 /**
  * Moves issued invoices to Overdue once their due date has passed.
@@ -36,13 +38,13 @@ public class InvoiceOverdueServiceImpl implements InvoiceOverdueService {
     private static final Set<InvoiceStatus> ELIGIBLE =
             Set.of(InvoiceStatus.SENT, InvoiceStatus.VIEWED);
 
-    private final InvoiceRepository invoiceRepository;
+    private final InvoiceDao invoiceDao;
     private final NotificationService notificationService;
 
     @Override
     @Transactional
     public int refreshForCreator(Long creatorId) {
-        List<Invoice> due = invoiceRepository.findByCreatorIdAndStatusInAndDueDateBefore(
+        List<Invoice> due = invoiceDao.findByCreatorIdAndStatusInAndDueDateBefore(
                 creatorId, ELIGIBLE, LocalDate.now());
         return markOverdue(due);
     }
@@ -50,7 +52,7 @@ public class InvoiceOverdueServiceImpl implements InvoiceOverdueService {
     @Override
     @Transactional
     public int refreshAll() {
-        List<Invoice> due = invoiceRepository.findByStatusInAndDueDateBefore(ELIGIBLE, LocalDate.now());
+        List<Invoice> due = invoiceDao.findByStatusInAndDueDateBefore(ELIGIBLE, LocalDate.now());
         return markOverdue(due);
     }
 
@@ -76,7 +78,7 @@ public class InvoiceOverdueServiceImpl implements InvoiceOverdueService {
                     invoice.getNetReceivable());
         }
 
-        invoiceRepository.saveAll(invoices);
+        invoiceDao.saveAll(invoices);
         log.info("Marked {} invoice(s) overdue", invoices.size());
         return invoices.size();
     }

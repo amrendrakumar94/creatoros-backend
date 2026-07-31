@@ -1,14 +1,16 @@
-package com.creatoros.repository;
+package com.creatoros.dao;
 
 import com.creatoros.entity.BrandDeal;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface BrandDealRepository extends JpaRepository<BrandDeal, Long> {
+public interface BrandDealDao {
+
+    BrandDeal save(BrandDeal deal);
+
+    /** Cascades to deliverables and tags. */
+    void delete(BrandDeal deal);
 
     List<BrandDeal> findByCreatorIdOrderByCreatedAtDesc(Long creatorId);
 

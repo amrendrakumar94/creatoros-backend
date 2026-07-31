@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.BrandDealRequest;
@@ -13,8 +13,8 @@ import com.creatoros.entity.NotificationType;
 import com.creatoros.entity.PaymentTerms;
 import com.creatoros.entity.UsageRights;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.repository.BrandDealRepository;
-import com.creatoros.repository.CreatorRepository;
+import com.creatoros.dao.BrandDealDao;
+import com.creatoros.dao.CreatorDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,21 +24,23 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.List;
+import com.creatoros.service.BrandDealService;
+import com.creatoros.service.NotificationService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class BrandDealServiceImpl implements BrandDealService {
 
-    private final BrandDealRepository brandDealRepository;
-    private final CreatorRepository creatorRepository;
+    private final BrandDealDao brandDealDao;
+    private final CreatorDao creatorDao;
     private final NotificationService notificationService;
     private final DomainMapper domainMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<BrandDealDto> listForCreator(Long creatorId) {
-        return brandDealRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
+        return brandDealDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
                 .map(domainMapper::toDealDto)
                 .toList();
     }
@@ -64,7 +66,7 @@ public class BrandDealServiceImpl implements BrandDealService {
                 .build();
 
         applyRequest(deal, request);
-        brandDealRepository.save(deal);
+        brandDealDao.save(deal);
 
         log.info("Created deal {} for creator {}", deal.getDealNumber(), creatorId);
         return domainMapper.toDealDto(deal);
@@ -83,7 +85,7 @@ public class BrandDealServiceImpl implements BrandDealService {
         }
         applyRequest(deal, request);
 
-        return domainMapper.toDealDto(brandDealRepository.save(deal));
+        return domainMapper.toDealDto(brandDealDao.save(deal));
     }
 
     @Override
@@ -92,7 +94,7 @@ public class BrandDealServiceImpl implements BrandDealService {
         BrandDeal deal = requireDeal(creatorId, dealId);
         DealStage previous = deal.getStage();
         deal.setStage(stage);
-        brandDealRepository.save(deal);
+        brandDealDao.save(deal);
 
         // Closing the loop on a deal is worth an alert; intermediate moves are not.
         if (stage == DealStage.PAYMENT_RECEIVED && previous != DealStage.PAYMENT_RECEIVED) {
@@ -114,7 +116,7 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Override
     @Transactional
     public void delete(Long creatorId, Long dealId) {
-        brandDealRepository.delete(requireDeal(creatorId, dealId));
+        brandDealDao.delete(requireDeal(creatorId, dealId));
     }
 
     /** Copies the mutable fields shared by create and update. */
@@ -176,17 +178,17 @@ public class BrandDealServiceImpl implements BrandDealService {
      * concurrent double-submit fails loudly rather than silently duplicating a number.
      */
     private String nextDealNumber(Long creatorId) {
-        long next = brandDealRepository.countByCreatorId(creatorId) + 1;
+        long next = brandDealDao.countByCreatorId(creatorId) + 1;
         return "BD-%d-%02d".formatted(LocalDate.now().getYear(), next);
     }
 
     private BrandDeal requireDeal(Long creatorId, Long dealId) {
-        return brandDealRepository.findByIdAndCreatorId(dealId, creatorId)
+        return brandDealDao.findByIdAndCreatorId(dealId, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Brand deal", dealId));
     }
 
     private Creator requireCreator(Long creatorId) {
-        return creatorRepository.findById(creatorId)
+        return creatorDao.findById(creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
     }
 

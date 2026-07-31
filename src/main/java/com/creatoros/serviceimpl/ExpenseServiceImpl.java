@@ -1,12 +1,12 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.expense.ExpenseDto;
 import com.creatoros.dto.expense.ExpenseRequest;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Expense;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.repository.CreatorRepository;
-import com.creatoros.repository.ExpenseRepository;
+import com.creatoros.dao.CreatorDao;
+import com.creatoros.dao.ExpenseDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,21 +14,23 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import com.creatoros.service.ExpenseService;
+import com.creatoros.service.GstCalculationService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ExpenseServiceImpl implements ExpenseService {
 
-    private final ExpenseRepository expenseRepository;
-    private final CreatorRepository creatorRepository;
+    private final ExpenseDao expenseDao;
+    private final CreatorDao creatorDao;
     private final GstCalculationService gstCalculationService;
     private final DomainMapper domainMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpenseDto> listForCreator(Long creatorId) {
-        return expenseRepository.findByCreatorIdOrderByExpenseDateDescIdDesc(creatorId).stream()
+        return expenseDao.findByCreatorIdOrderByExpenseDateDescIdDesc(creatorId).stream()
                 .map(domainMapper::toExpenseDto)
                 .toList();
     }
@@ -42,13 +44,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional
     public ExpenseDto create(Long creatorId, ExpenseRequest request) {
-        Creator creator = creatorRepository.findById(creatorId)
+        Creator creator = creatorDao.findById(creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
 
         Expense expense = Expense.builder().creator(creator).build();
         applyRequest(expense, request);
 
-        expenseRepository.save(expense);
+        expenseDao.save(expense);
         log.debug("Recorded expense {} for creator {}", expense.getId(), creatorId);
 
         return domainMapper.toExpenseDto(expense);
@@ -59,13 +61,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     public ExpenseDto update(Long creatorId, Long expenseId, ExpenseRequest request) {
         Expense expense = requireExpense(creatorId, expenseId);
         applyRequest(expense, request);
-        return domainMapper.toExpenseDto(expenseRepository.save(expense));
+        return domainMapper.toExpenseDto(expenseDao.save(expense));
     }
 
     @Override
     @Transactional
     public void delete(Long creatorId, Long expenseId) {
-        expenseRepository.delete(requireExpense(creatorId, expenseId));
+        expenseDao.delete(requireExpense(creatorId, expenseId));
     }
 
     private void applyRequest(Expense expense, ExpenseRequest request) {
@@ -88,7 +90,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     private Expense requireExpense(Long creatorId, Long expenseId) {
-        return expenseRepository.findByIdAndCreatorId(expenseId, creatorId)
+        return expenseDao.findByIdAndCreatorId(expenseId, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Expense", expenseId));
     }
 

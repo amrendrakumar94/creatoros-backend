@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.DeliverableItemDto;

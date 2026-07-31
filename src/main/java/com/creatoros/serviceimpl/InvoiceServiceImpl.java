@@ -1,4 +1,4 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.dto.invoice.CreateInvoiceRequest;
 import com.creatoros.dto.invoice.InvoiceDto;
@@ -15,9 +15,9 @@ import com.creatoros.entity.InvoiceStatus;
 import com.creatoros.entity.NotificationType;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.repository.BrandDealRepository;
-import com.creatoros.repository.CreatorRepository;
-import com.creatoros.repository.InvoiceRepository;
+import com.creatoros.dao.BrandDealDao;
+import com.creatoros.dao.CreatorDao;
+import com.creatoros.dao.InvoiceDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import com.creatoros.service.GstCalculationService;
+import com.creatoros.service.InvoiceOverdueService;
+import com.creatoros.service.InvoiceService;
+import com.creatoros.service.NotificationService;
 
 @Service
 @Slf4j
@@ -34,9 +38,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     private static final int DEFAULT_PAYMENT_DAYS = 30;
 
-    private final InvoiceRepository invoiceRepository;
-    private final BrandDealRepository brandDealRepository;
-    private final CreatorRepository creatorRepository;
+    private final InvoiceDao invoiceDao;
+    private final BrandDealDao brandDealDao;
+    private final CreatorDao creatorDao;
     private final GstCalculationService gstCalculationService;
     private final NotificationService notificationService;
     private final InvoiceOverdueService invoiceOverdueService;
@@ -50,7 +54,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional
     public List<InvoiceDto> listForCreator(Long creatorId) {
         invoiceOverdueService.refreshForCreator(creatorId);
-        return invoiceRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
+        return invoiceDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
                 .map(domainMapper::toInvoiceDto)
                 .toList();
     }
@@ -113,14 +117,14 @@ public class InvoiceServiceImpl implements InvoiceService {
         applyTax(invoice, subtotal);
         linkDeal(invoice, creatorId, request.dealId());
 
-        invoiceRepository.save(invoice);
+        invoiceDao.save(invoice);
 
         // Keep the deal's back-reference in step, which the old client-side flow never did.
         if (invoice.getDealId() != null) {
-            brandDealRepository.findByIdAndCreatorId(invoice.getDealId(), creatorId)
+            brandDealDao.findByIdAndCreatorId(invoice.getDealId(), creatorId)
                     .ifPresent(deal -> {
                         deal.setInvoiceId(invoice.getId());
-                        brandDealRepository.save(deal);
+                        brandDealDao.save(deal);
                     });
         }
 
@@ -146,7 +150,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         if (request.status() != InvoiceStatus.PAID) {
             invoice.setPaidDate(null);
         }
-        return domainMapper.toInvoiceDto(invoiceRepository.save(invoice));
+        return domainMapper.toInvoiceDto(invoiceDao.save(invoice));
     }
 
     @Override
@@ -166,7 +170,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         invoice.setStatus(InvoiceStatus.PAID);
         invoice.setPaidDate(settled);
-        invoiceRepository.save(invoice);
+        invoiceDao.save(invoice);
 
         notificationService.record(invoice.getCreator(), NotificationType.PAYMENT,
                 "Payment received: %s".formatted(invoice.getBrandName()),
@@ -187,7 +191,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         invoice.setReminderSentCount(invoice.getReminderSentCount() + 1);
         invoice.setLastReminderDate(LocalDate.now());
-        invoiceRepository.save(invoice);
+        invoiceDao.save(invoice);
 
         String channel = request == null || request.channel() == null ? "email" : request.channel();
 
@@ -210,7 +214,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     public InvoiceDto setExpectedSettlementDate(Long creatorId, Long invoiceId, LocalDate expectedDate) {
         Invoice invoice = requireInvoice(creatorId, invoiceId);
         invoice.setExpectedSettlementDate(expectedDate);
-        return domainMapper.toInvoiceDto(invoiceRepository.save(invoice));
+        return domainMapper.toInvoiceDto(invoiceDao.save(invoice));
     }
 
     @Override
@@ -220,13 +224,13 @@ public class InvoiceServiceImpl implements InvoiceService {
 
         // Clear the deal's back-reference first, or it would dangle.
         if (invoice.getDealId() != null) {
-            brandDealRepository.findByIdAndCreatorId(invoice.getDealId(), creatorId)
+            brandDealDao.findByIdAndCreatorId(invoice.getDealId(), creatorId)
                     .ifPresent(deal -> {
                         deal.setInvoiceId(null);
-                        brandDealRepository.save(deal);
+                        brandDealDao.save(deal);
                     });
         }
-        invoiceRepository.delete(invoice);
+        invoiceDao.delete(invoice);
     }
 
     private void applyTax(Invoice invoice, BigDecimal subtotal) {
@@ -253,7 +257,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         } catch (NumberFormatException ex) {
             throw new BadRequestException("Invalid deal reference: " + dealId, "INVALID_DEAL_ID");
         }
-        BrandDeal deal = brandDealRepository.findByIdAndCreatorId(parsed, creatorId)
+        BrandDeal deal = brandDealDao.findByIdAndCreatorId(parsed, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Brand deal", dealId));
         invoice.setDealId(deal.getId());
     }
@@ -272,17 +276,17 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     /** COS-YYYY-NNN, sequential per creator and unique by database constraint. */
     private String nextInvoiceNumber(Long creatorId) {
-        long next = invoiceRepository.countByCreatorId(creatorId) + 1;
+        long next = invoiceDao.countByCreatorId(creatorId) + 1;
         return "COS-%d-%03d".formatted(LocalDate.now().getYear(), next);
     }
 
     private Invoice requireInvoice(Long creatorId, Long invoiceId) {
-        return invoiceRepository.findByIdAndCreatorId(invoiceId, creatorId)
+        return invoiceDao.findByIdAndCreatorId(invoiceId, creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Invoice", invoiceId));
     }
 
     private Creator requireCreator(Long creatorId) {
-        return creatorRepository.findById(creatorId)
+        return creatorDao.findById(creatorId)
                 .orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
     }
 

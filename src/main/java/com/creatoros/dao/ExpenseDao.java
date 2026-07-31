@@ -1,16 +1,18 @@
-package com.creatoros.repository;
+package com.creatoros.dao;
 
 import com.creatoros.entity.Expense;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface ExpenseRepository extends JpaRepository<Expense, Long> {
+public interface ExpenseDao {
+
+    Expense save(Expense expense);
+
+    void delete(Expense expense);
 
     List<Expense> findByCreatorIdOrderByExpenseDateDescIdDesc(Long creatorId);
 
+    /** Scoped lookup: an id belonging to another creator simply is not found. */
     Optional<Expense> findByIdAndCreatorId(Long id, Long creatorId);
 }

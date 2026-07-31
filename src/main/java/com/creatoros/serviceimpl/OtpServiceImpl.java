@@ -1,11 +1,11 @@
-package com.creatoros.service;
+package com.creatoros.serviceimpl;
 
 import com.creatoros.config.AppProperties;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.OtpPurpose;
 import com.creatoros.entity.OtpToken;
 import com.creatoros.exception.BadRequestException;
-import com.creatoros.repository.OtpTokenRepository;
+import com.creatoros.dao.OtpTokenDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,6 +15,8 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+import com.creatoros.service.OtpSender;
+import com.creatoros.service.OtpService;
 
 @Service
 @Slf4j
@@ -23,7 +25,7 @@ public class OtpServiceImpl implements OtpService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final OtpTokenRepository  otpTokenRepository;
+    private final OtpTokenDao  otpTokenDao;
     private final OtpSender           otpSender;
     private final AppProperties       appProperties;
 
@@ -31,20 +33,20 @@ public class OtpServiceImpl implements OtpService {
     @Transactional
     public void issue(Creator creator, OtpPurpose purpose) {
         // Only the most recently issued code may be redeemable.
-        otpTokenRepository.consumeOutstanding(creator, purpose, Instant.now());
+        otpTokenDao.consumeOutstanding(creator, purpose, Instant.now());
 
         String code = generateCode();
         OtpToken token = OtpToken.builder().creator(creator).code(code).purpose(purpose)
                 .expiresAt(Instant.now().plus(Duration.ofMinutes(appProperties.getOtp().getTtlMinutes()))).attempts(0).build();
 
-        otpTokenRepository.save(token);
+        otpTokenDao.save(token);
         otpSender.send(creator, code, purpose);
     }
 
     @Override
     @Transactional
     public void verify(Creator creator, OtpPurpose purpose, String code) {
-        Optional<OtpToken> maybeToken = otpTokenRepository.findFirstByCreatorAndPurposeAndConsumedAtIsNullOrderByCreatedAtDesc(creator, purpose);
+        Optional<OtpToken> maybeToken = otpTokenDao.findFirstByCreatorAndPurposeAndConsumedAtIsNullOrderByCreatedAtDesc(creator, purpose);
 
         OtpToken token = maybeToken
                 .orElseThrow(() -> new BadRequestException("No verification code is pending. Request a new one.", "OTP_NOT_FOUND"));
@@ -60,7 +62,7 @@ public class OtpServiceImpl implements OtpService {
 
         if (!token.getCode().equals(code)) {
             token.setAttempts(token.getAttempts() + 1);
-            otpTokenRepository.save(token);
+            otpTokenDao.save(token);
 
             int remaining = maxAttempts - token.getAttempts();
             log.warn("Incorrect OTP for creator {} ({} attempts remaining)", creator.getId(), remaining);
@@ -72,7 +74,7 @@ public class OtpServiceImpl implements OtpService {
         }
 
         token.setConsumedAt(Instant.now());
-        otpTokenRepository.save(token);
+        otpTokenDao.save(token);
     }
 
     private String generateCode() {
