@@ -1,10 +1,7 @@
 package com.creatoros.security;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import java.io.IOException;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,17 +11,12 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 
-/**
- * Populates the SecurityContext from an {@code Authorization: Bearer <jwt>}
- * header.
- *
- * <p>
- * Silently does nothing when the header is absent or the token is invalid -
- * authorization is left to the filter chain, which rejects unauthenticated
- * requests to protected endpoints.
- */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -49,8 +41,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(authentication);
                     }
                 } catch (UsernameNotFoundException ex) {
-                    // Token references a creator that no longer exists - stay
-                    // anonymous.
                     logger.debug("JWT subject no longer resolvable: " + email);
                 }
             });

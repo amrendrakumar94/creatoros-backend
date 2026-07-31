@@ -10,8 +10,5 @@ public interface CreatorProfileService {
 
     CurrentUserResponse getCurrentUser(Long creatorId);
 
-    /**
-     * Applies a partial update - null fields on the request are left untouched.
-     */
     CreatorProfileDto updateProfile(Long creatorId, UpdateCreatorProfileRequest request);
 }

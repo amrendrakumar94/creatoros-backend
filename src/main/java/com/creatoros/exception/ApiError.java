@@ -1,18 +1,10 @@
 package com.creatoros.exception;
 
-import org.springframework.http.HttpStatus;
-
 import java.time.Instant;
 import java.util.Map;
 
-/**
- * Uniform error body for every failed request.
- *
- * @param errorCode stable machine-readable code the frontend can branch on
- *            (e.g. ACCOUNT_NOT_VERIFIED), independent of the human message
- * @param fieldErrors field name to message, populated only for validation
- *            failures
- */
+import org.springframework.http.HttpStatus;
+
 public record ApiError(Instant timestamp, int status, String error, String message, String errorCode, String path, Map<String, String> fieldErrors) {
 
     public static ApiError of(HttpStatus status, String message, String errorCode, String path) {

@@ -1,5 +1,14 @@
 package com.creatoros.serviceimpl;
 
+import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.creatoros.dao.BrandDealDao;
+import com.creatoros.dao.CreatorDao;
 import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.BrandDealRequest;
 import com.creatoros.dto.deal.DeliverableItemDto;
@@ -13,36 +22,26 @@ import com.creatoros.entity.NotificationType;
 import com.creatoros.entity.PaymentTerms;
 import com.creatoros.entity.UsageRights;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.dao.BrandDealDao;
-import com.creatoros.dao.CreatorDao;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.LinkedHashSet;
-import java.util.List;
 import com.creatoros.service.BrandDealService;
 import com.creatoros.service.NotificationService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class BrandDealServiceImpl implements BrandDealService {
 
-    private final BrandDealDao brandDealDao;
-    private final CreatorDao creatorDao;
+    private final BrandDealDao        brandDealDao;
+    private final CreatorDao          creatorDao;
     private final NotificationService notificationService;
-    private final DomainMapper domainMapper;
+    private final DomainMapper        domainMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<BrandDealDto> listForCreator(Long creatorId) {
-        return brandDealDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream()
-                .map(domainMapper::toDealDto)
-                .toList();
+        return brandDealDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream().map(domainMapper::toDealDto).toList();
     }
 
     @Override
@@ -56,14 +55,9 @@ public class BrandDealServiceImpl implements BrandDealService {
     public BrandDealDto create(Long creatorId, BrandDealRequest request) {
         Creator creator = requireCreator(creatorId);
 
-        BrandDeal deal = BrandDeal.builder()
-                .creator(creator)
-                .dealNumber(nextDealNumber(creatorId))
-                .stage(request.stage())
-                .platform(request.platform())
-                .amount(request.amount())
-                .paymentTerms(request.paymentTerms() == null ? PaymentTerms.NET_30 : request.paymentTerms())
-                .build();
+        BrandDeal deal = BrandDeal.builder().creator(creator).dealNumber(nextDealNumber(creatorId)).stage(request.stage())
+                .platform(request.platform()).amount(request.amount())
+                .paymentTerms(request.paymentTerms() == null ? PaymentTerms.NET_30 : request.paymentTerms()).build();
 
         applyRequest(deal, request);
         brandDealDao.save(deal);
@@ -96,18 +90,11 @@ public class BrandDealServiceImpl implements BrandDealService {
         deal.setStage(stage);
         brandDealDao.save(deal);
 
-        // Closing the loop on a deal is worth an alert; intermediate moves are not.
         if (stage == DealStage.PAYMENT_RECEIVED && previous != DealStage.PAYMENT_RECEIVED) {
-            notificationService.record(
-                    deal.getCreator(),
-                    NotificationType.DEAL,
-                    "Deal closed: " + deal.getBrandName(),
+            notificationService.record(deal.getCreator(), NotificationType.DEAL, "Deal closed: " + deal.getBrandName(),
                     "%s reached Payment Received.".formatted(
-                            deal.getCampaignTitle() == null || deal.getCampaignTitle().isBlank()
-                                    ? deal.getDealNumber()
-                                    : deal.getCampaignTitle()),
-                    "deals",
-                    deal.getAmount());
+                            deal.getCampaignTitle() == null || deal.getCampaignTitle().isBlank() ? deal.getDealNumber() : deal.getCampaignTitle()),
+                    "deals", deal.getAmount());
         }
 
         return domainMapper.toDealDto(deal);
@@ -119,7 +106,6 @@ public class BrandDealServiceImpl implements BrandDealService {
         brandDealDao.delete(requireDeal(creatorId, dealId));
     }
 
-    /** Copies the mutable fields shared by create and update. */
     private void applyRequest(BrandDeal deal, BrandDealRequest request) {
         deal.setBrandName(request.brandName());
         deal.setBrandLogo(blankToNull(request.brandLogo()));
@@ -136,12 +122,9 @@ public class BrandDealServiceImpl implements BrandDealService {
 
         deal.getTags().clear();
         if (request.tags() != null) {
-            deal.getTags().addAll(new LinkedHashSet<>(request.tags().stream()
-                    .filter(t -> t != null && !t.isBlank())
-                    .toList()));
+            deal.getTags().addAll(new LinkedHashSet<>(request.tags().stream().filter(t -> t != null && !t.isBlank()).toList()));
         }
 
-        // Replace the deliverable set wholesale - orphanRemoval deletes the ones that went away.
         deal.getDeliverables().clear();
         if (request.deliverables() != null) {
             int order = 0;
@@ -149,13 +132,8 @@ public class BrandDealServiceImpl implements BrandDealService {
                 if (dto == null || dto.type() == null) {
                     continue;
                 }
-                deal.addDeliverable(DeliverableItem.builder()
-                        .type(dto.type())
-                        .title(blankToNull(dto.title()))
-                        .dueDate(dto.dueDate())
-                        .status(dto.status() == null ? DeliverableStatus.PENDING : dto.status())
-                        .link(blankToNull(dto.link()))
-                        .sortOrder(order++)
+                deal.addDeliverable(DeliverableItem.builder().type(dto.type()).title(blankToNull(dto.title())).dueDate(dto.dueDate())
+                        .status(dto.status() == null ? DeliverableStatus.PENDING : dto.status()).link(blankToNull(dto.link())).sortOrder(order++)
                         .build());
             }
         }
@@ -165,31 +143,22 @@ public class BrandDealServiceImpl implements BrandDealService {
         if (dto == null) {
             return new UsageRights();
         }
-        return UsageRights.builder()
-                .exclusivityDays(dto.exclusivityDays() == null ? 0 : dto.exclusivityDays())
-                .paidAdsAllowed(Boolean.TRUE.equals(dto.paidAdsAllowed()))
-                .whitelistingAllowed(Boolean.TRUE.equals(dto.whitelistingAllowed()))
-                .territory(blankToNull(dto.territory()))
-                .build();
+        return UsageRights.builder().exclusivityDays(dto.exclusivityDays() == null ? 0 : dto.exclusivityDays())
+                .paidAdsAllowed(Boolean.TRUE.equals(dto.paidAdsAllowed())).whitelistingAllowed(Boolean.TRUE.equals(dto.whitelistingAllowed()))
+                .territory(blankToNull(dto.territory())).build();
     }
 
-    /**
-     * BD-YYYY-NN, sequential per creator. Uniqueness is enforced by a database constraint, so a
-     * concurrent double-submit fails loudly rather than silently duplicating a number.
-     */
     private String nextDealNumber(Long creatorId) {
         long next = brandDealDao.countByCreatorId(creatorId) + 1;
         return "BD-%d-%02d".formatted(LocalDate.now().getYear(), next);
     }
 
     private BrandDeal requireDeal(Long creatorId, Long dealId) {
-        return brandDealDao.findByIdAndCreatorId(dealId, creatorId)
-                .orElseThrow(() -> ResourceNotFoundException.of("Brand deal", dealId));
+        return brandDealDao.findByIdAndCreatorId(dealId, creatorId).orElseThrow(() -> ResourceNotFoundException.of("Brand deal", dealId));
     }
 
     private Creator requireCreator(Long creatorId) {
-        return creatorDao.findById(creatorId)
-                .orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
+        return creatorDao.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
     }
 
     private String blankToNull(String value) {

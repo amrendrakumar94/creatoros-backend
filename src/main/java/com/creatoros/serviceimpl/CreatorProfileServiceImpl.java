@@ -1,5 +1,12 @@
 package com.creatoros.serviceimpl;
 
+import java.util.LinkedHashSet;
+import java.util.function.Consumer;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.creatoros.dao.CreatorDao;
 import com.creatoros.dto.BankDetailsDto;
 import com.creatoros.dto.CreatorProfileDto;
 import com.creatoros.dto.CurrentUserResponse;
@@ -7,23 +14,18 @@ import com.creatoros.dto.UpdateCreatorProfileRequest;
 import com.creatoros.entity.BankDetails;
 import com.creatoros.entity.Creator;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.dao.CreatorDao;
+import com.creatoros.service.CreatorProfileService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.LinkedHashSet;
-import java.util.function.Consumer;
-import com.creatoros.service.CreatorProfileService;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class CreatorProfileServiceImpl implements CreatorProfileService {
 
-    private final CreatorDao creatorDao;
-    private final CreatorMapper     creatorMapper;
+    private final CreatorDao    creatorDao;
+    private final CreatorMapper creatorMapper;
 
     @Override
     @Transactional(readOnly = true)

@@ -1,9 +1,5 @@
 package com.creatoros.exception;
 
-/**
- * Thrown when a requested entity does not exist, or belongs to a different
- * creator.
- */
 public class ResourceNotFoundException extends RuntimeException {
 
     public ResourceNotFoundException(String message) {

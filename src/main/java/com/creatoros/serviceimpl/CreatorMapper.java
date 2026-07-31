@@ -1,15 +1,15 @@
 package com.creatoros.serviceimpl;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.creatoros.dto.BankDetailsDto;
 import com.creatoros.dto.CreatorProfileDto;
 import com.creatoros.entity.BankDetails;
 import com.creatoros.entity.Creator;
-import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
-
-/** Entity to DTO conversion. Keeps JPA types out of the controller layer. */
 @Component
 public class CreatorMapper {
 

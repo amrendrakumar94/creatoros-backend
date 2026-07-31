@@ -1,5 +1,15 @@
 package com.creatoros.serviceimpl;
 
+import java.math.BigDecimal;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Optional;
+
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.creatoros.dao.CreatorDao;
 import com.creatoros.dto.auth.AuthResponse;
 import com.creatoros.dto.auth.LoginRequest;
 import com.creatoros.dto.auth.ResetPasswordRequest;
@@ -13,31 +23,23 @@ import com.creatoros.entity.Role;
 import com.creatoros.exception.AccountNotVerifiedException;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.InvalidCredentialsException;
-import com.creatoros.dao.CreatorDao;
 import com.creatoros.security.JwtService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Optional;
 import com.creatoros.service.AuthService;
 import com.creatoros.service.OtpService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final CreatorDao creatorDao;
-    private final OtpService        otpService;
-    private final PasswordEncoder   passwordEncoder;
-    private final JwtService        jwtService;
-    private final CreatorMapper     creatorMapper;
+    private final CreatorDao      creatorDao;
+    private final OtpService      otpService;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtService      jwtService;
+    private final CreatorMapper   creatorMapper;
 
     @Override
     @Transactional
@@ -47,8 +49,6 @@ public class AuthServiceImpl implements AuthService {
         Optional<Creator> existing = creatorDao.findByEmailIgnoreCase(email);
         if (existing.isPresent()) {
             Creator creator = existing.get();
-            // A half-finished signup should not be a dead end - refresh the
-            // details and re-send.
             if (creator.getStatus() == CreatorStatus.PENDING) {
                 creator.setName(request.name());
                 creator.setPhone(request.phone());
@@ -119,9 +119,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public void forgotPassword(String email) {
-        // Never reveal whether the address is registered.
-        creatorDao.findByEmailIgnoreCase(normalizeEmail(email)).ifPresentOrElse(
-                creator -> otpService.issue(creator, OtpPurpose.PASSWORD_RESET),
+        creatorDao.findByEmailIgnoreCase(normalizeEmail(email)).ifPresentOrElse(creator -> otpService.issue(creator, OtpPurpose.PASSWORD_RESET),
                 () -> log.info("Password reset requested for unregistered email {}", email));
     }
 
@@ -129,17 +127,12 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public AuthResponse resetPassword(ResetPasswordRequest request) {
         Creator creator = requireCreator(request.email());
-
         otpService.verify(creator, OtpPurpose.PASSWORD_RESET, request.code());
-
         creator.setPasswordHash(passwordEncoder.encode(request.newPassword()));
-        // Completing a reset proves control of the mailbox, so an unverified
-        // account becomes active.
         if (creator.getStatus() == CreatorStatus.PENDING) {
             creator.setStatus(CreatorStatus.ACTIVE);
         }
         creatorDao.save(creator);
-
         return buildAuthResponse(creator);
     }
 
@@ -157,11 +150,6 @@ public class AuthServiceImpl implements AuthService {
         return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    /**
-     * Builds a stable public handle from the creator's name, falling back to
-     * the email local part, and disambiguates with a numeric suffix on
-     * collision.
-     */
     private String generateUniqueHandle(String name, String email) {
         String base = slugify(name);
         if (base.isEmpty()) {

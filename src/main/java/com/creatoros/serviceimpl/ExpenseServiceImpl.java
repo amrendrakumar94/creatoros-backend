@@ -1,38 +1,38 @@
 package com.creatoros.serviceimpl;
 
+import java.time.LocalDate;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.creatoros.dao.CreatorDao;
+import com.creatoros.dao.ExpenseDao;
 import com.creatoros.dto.expense.ExpenseDto;
 import com.creatoros.dto.expense.ExpenseRequest;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Expense;
 import com.creatoros.exception.ResourceNotFoundException;
-import com.creatoros.dao.CreatorDao;
-import com.creatoros.dao.ExpenseDao;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.util.List;
 import com.creatoros.service.ExpenseService;
 import com.creatoros.service.GstCalculationService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class ExpenseServiceImpl implements ExpenseService {
 
-    private final ExpenseDao expenseDao;
-    private final CreatorDao creatorDao;
+    private final ExpenseDao            expenseDao;
+    private final CreatorDao            creatorDao;
     private final GstCalculationService gstCalculationService;
-    private final DomainMapper domainMapper;
+    private final DomainMapper          domainMapper;
 
     @Override
     @Transactional(readOnly = true)
     public List<ExpenseDto> listForCreator(Long creatorId) {
-        return expenseDao.findByCreatorIdOrderByExpenseDateDescIdDesc(creatorId).stream()
-                .map(domainMapper::toExpenseDto)
-                .toList();
+        return expenseDao.findByCreatorIdOrderByExpenseDateDescIdDesc(creatorId).stream().map(domainMapper::toExpenseDto).toList();
     }
 
     @Override
@@ -44,8 +44,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional
     public ExpenseDto create(Long creatorId, ExpenseRequest request) {
-        Creator creator = creatorDao.findById(creatorId)
-                .orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
+        Creator creator = creatorDao.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
 
         Expense expense = Expense.builder().creator(creator).build();
         applyRequest(expense, request);
@@ -81,17 +80,14 @@ public class ExpenseServiceImpl implements ExpenseService {
         expense.setReceiptUrl(blankToNull(request.receiptUrl()));
         expense.setTaxDeductible(request.taxDeductible() == null || request.taxDeductible());
 
-        // ITC is only claimable against a valid GST invoice, so the GSTIN is cleared with it.
         boolean hasGstInvoice = request.hasGstInvoice();
         expense.setHasGstInvoice(hasGstInvoice);
         expense.setGstin(hasGstInvoice ? upperOrNull(request.gstin()) : null);
-        expense.setGstClaimableAmount(
-                gstCalculationService.calculateInputTaxCredit(request.amount(), hasGstInvoice));
+        expense.setGstClaimableAmount(gstCalculationService.calculateInputTaxCredit(request.amount(), hasGstInvoice));
     }
 
     private Expense requireExpense(Long creatorId, Long expenseId) {
-        return expenseDao.findByIdAndCreatorId(expenseId, creatorId)
-                .orElseThrow(() -> ResourceNotFoundException.of("Expense", expenseId));
+        return expenseDao.findByIdAndCreatorId(expenseId, creatorId).orElseThrow(() -> ResourceNotFoundException.of("Expense", expenseId));
     }
 
     private String blankToNull(String value) {

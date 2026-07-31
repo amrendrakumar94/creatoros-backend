@@ -1,9 +1,9 @@
 package com.creatoros.service;
 
+import java.util.List;
+
 import com.creatoros.dto.expense.ExpenseDto;
 import com.creatoros.dto.expense.ExpenseRequest;
-
-import java.util.List;
 
 public interface ExpenseService {
 
@@ -11,7 +11,6 @@ public interface ExpenseService {
 
     ExpenseDto get(Long creatorId, Long expenseId);
 
-    /** Input tax credit is computed server-side from the amount and GST-invoice flag. */
     ExpenseDto create(Long creatorId, ExpenseRequest request);
 
     ExpenseDto update(Long creatorId, Long expenseId, ExpenseRequest request);

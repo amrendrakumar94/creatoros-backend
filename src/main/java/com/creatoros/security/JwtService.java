@@ -1,7 +1,16 @@
 package com.creatoros.security;
 
+import java.time.Instant;
+import java.util.Date;
+import java.util.Optional;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.stereotype.Service;
+
 import com.creatoros.config.AppProperties;
 import com.creatoros.entity.Creator;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -9,17 +18,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
-import javax.crypto.SecretKey;
-import java.time.Instant;
-import java.util.Date;
-import java.util.Optional;
-
-/**
- * Issues and validates the HS256 bearer tokens used for stateless
- * authentication.
- */
 @Service
 @Slf4j
 @RequiredArgsConstructor
@@ -42,10 +41,6 @@ public class JwtService {
         return Instant.now().plusMillis(appProperties.getJwt().getExpirationMs());
     }
 
-    /**
-     * Subject is the creator id; email and role ride along as claims for cheap
-     * access.
-     */
     public String generateToken(Creator creator) {
         Instant now = Instant.now();
         return Jwts.builder().subject(String.valueOf(creator.getId())).claim(CLAIM_EMAIL, creator.getEmail())
@@ -53,10 +48,6 @@ public class JwtService {
                 .expiration(Date.from(now.plusMillis(appProperties.getJwt().getExpirationMs()))).signWith(signingKey()).compact();
     }
 
-    /**
-     * @return the creator id, or empty if the token is malformed, tampered
-     *         with, or expired.
-     */
     public Optional<Long> extractCreatorId(String token) {
         return parse(token).map(claims -> Long.valueOf(claims.getSubject()));
     }

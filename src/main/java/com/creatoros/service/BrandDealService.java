@@ -1,10 +1,10 @@
 package com.creatoros.service;
 
+import java.util.List;
+
 import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.BrandDealRequest;
 import com.creatoros.entity.DealStage;
-
-import java.util.List;
 
 public interface BrandDealService {
 
@@ -12,7 +12,6 @@ public interface BrandDealService {
 
     BrandDealDto get(Long creatorId, Long dealId);
 
-    /** Assigns the next BD-YYYY-NN number for this creator. */
     BrandDealDto create(Long creatorId, BrandDealRequest request);
 
     BrandDealDto update(Long creatorId, Long dealId, BrandDealRequest request);

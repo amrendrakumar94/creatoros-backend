@@ -1,22 +1,24 @@
 package com.creatoros.serviceimpl;
 
-import com.creatoros.config.AppProperties;
-import com.creatoros.entity.Creator;
-import com.creatoros.entity.OtpPurpose;
-import com.creatoros.entity.OtpToken;
-import com.creatoros.exception.BadRequestException;
-import com.creatoros.dao.OtpTokenDao;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.creatoros.config.AppProperties;
+import com.creatoros.dao.OtpTokenDao;
+import com.creatoros.entity.Creator;
+import com.creatoros.entity.OtpPurpose;
+import com.creatoros.entity.OtpToken;
+import com.creatoros.exception.BadRequestException;
 import com.creatoros.service.OtpSender;
 import com.creatoros.service.OtpService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -25,14 +27,13 @@ public class OtpServiceImpl implements OtpService {
 
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private final OtpTokenDao  otpTokenDao;
+    private final OtpTokenDao         otpTokenDao;
     private final OtpSender           otpSender;
     private final AppProperties       appProperties;
 
     @Override
     @Transactional
     public void issue(Creator creator, OtpPurpose purpose) {
-        // Only the most recently issued code may be redeemable.
         otpTokenDao.consumeOutstanding(creator, purpose, Instant.now());
 
         String code = generateCode();

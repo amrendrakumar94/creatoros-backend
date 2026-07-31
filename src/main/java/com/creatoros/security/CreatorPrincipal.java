@@ -1,19 +1,17 @@
 package com.creatoros.security;
 
-import com.creatoros.entity.Creator;
-import com.creatoros.entity.CreatorStatus;
-import lombok.Getter;
+import java.util.Collection;
+import java.util.List;
+
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
+import com.creatoros.entity.Creator;
+import com.creatoros.entity.CreatorStatus;
 
-/**
- * The authenticated creator, carried on the SecurityContext for the life of a
- * request.
- */
+import lombok.Getter;
+
 @Getter
 public class CreatorPrincipal implements UserDetails {
 
@@ -41,10 +39,6 @@ public class CreatorPrincipal implements UserDetails {
         return email;
     }
 
-    /**
-     * A PENDING account has not verified its signup OTP and must not hold a
-     * session.
-     */
     @Override
     public boolean isEnabled() {
         return status == CreatorStatus.ACTIVE;

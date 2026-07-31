@@ -2,10 +2,6 @@ package com.creatoros.exception;
 
 import lombok.Getter;
 
-/**
- * A client-side error carrying a stable {@code errorCode} for the frontend to
- * branch on.
- */
 @Getter
 public class BadRequestException extends RuntimeException {
 
