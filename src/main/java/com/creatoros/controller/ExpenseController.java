@@ -1,11 +1,7 @@
 package com.creatoros.controller;
 
-import com.creatoros.dto.expense.ExpenseDto;
-import com.creatoros.dto.expense.ExpenseRequest;
-import com.creatoros.security.SecurityUtils;
-import com.creatoros.service.ExpenseService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,7 +13,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.creatoros.dto.expense.ExpenseDto;
+import com.creatoros.dto.expense.ExpenseRequest;
+import com.creatoros.security.SecurityUtils;
+import com.creatoros.service.ExpenseService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/expenses")
@@ -38,13 +40,11 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<ExpenseDto> create(@Valid @RequestBody ExpenseRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(expenseService.create(SecurityUtils.currentCreatorId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(expenseService.create(SecurityUtils.currentCreatorId(), request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ExpenseDto> update(@PathVariable Long id,
-                                             @Valid @RequestBody ExpenseRequest request) {
+    public ResponseEntity<ExpenseDto> update(@PathVariable Long id, @Valid @RequestBody ExpenseRequest request) {
         return ResponseEntity.ok(expenseService.update(SecurityUtils.currentCreatorId(), id, request));
     }
 

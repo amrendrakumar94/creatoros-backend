@@ -3,8 +3,10 @@ package com.creatoros;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration;
+import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 
-@SpringBootApplication
+@SpringBootApplication(exclude = { HibernateJpaAutoConfiguration.class, DataJpaRepositoriesAutoConfiguration.class })
 @ConfigurationPropertiesScan
 public class CreatorosBackendApplication {
 

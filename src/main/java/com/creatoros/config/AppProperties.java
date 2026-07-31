@@ -1,10 +1,11 @@
 package com.creatoros.config;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * Strongly-typed binding for the {@code app.*} keys in application.properties.
@@ -14,9 +15,9 @@ import java.util.List;
 @Setter
 public class AppProperties {
 
-    private Jwt jwt = new Jwt();
-    private Otp otp = new Otp();
-    private Cors cors = new Cors();
+    private Jwt        jwt     = new Jwt();
+    private Otp        otp     = new Otp();
+    private Cors       cors    = new Cors();
     private InvoiceJob invoice = new InvoiceJob();
 
     @Getter
@@ -24,7 +25,7 @@ public class AppProperties {
     public static class InvoiceJob {
         /** Cron for the nightly overdue sweep. */
         private String overdueCron = "0 15 0 * * *";
-        private String timezone = "Asia/Kolkata";
+        private String timezone    = "Asia/Kolkata";
     }
 
     @Getter
@@ -34,13 +35,13 @@ public class AppProperties {
          * Base64-encoded HS256 signing key; must decode to at least 32 bytes.
          */
         private String secret;
-        private long expirationMs = 604_800_000L;
+        private long   expirationMs = 604_800_000L;
     }
 
     @Getter
     @Setter
     public static class Otp {
-        private int ttlMinutes = 10;
+        private int ttlMinutes  = 10;
         private int maxAttempts = 5;
     }
 

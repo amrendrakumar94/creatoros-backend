@@ -1,33 +1,33 @@
 package com.creatoros.daoimpl;
 
-import com.creatoros.config.DatabaseConfig;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Base class for the Hibernate-backed data access objects.
  *
- * <p>The Session is obtained by unwrapping the container-managed EntityManager rather than via
- * {@code SessionFactory.getCurrentSession()}. Spring Boot's JPA auto-configuration wires a
- * {@code JpaTransactionManager}, which binds an EntityManager to the thread and does not install a
- * Hibernate {@code CurrentSessionContext} - so {@code getCurrentSession()} would throw. Unwrapping
- * yields the Session enlisted in the active {@code @Transactional}, which is what every query here
- * needs.
+ * <p>Because the application uses {@code HibernateTransactionManager} rather than JPA's
+ * {@code JpaTransactionManager}, {@link SessionFactory#getCurrentSession()} returns the Session
+ * bound to the active {@code @Transactional} - there is no EntityManager to unwrap. It throws if
+ * called with no transaction in progress, which is the behaviour we want: every DAO call must be
+ * inside a service-level transaction.
+ *
+ * <p>Field injection is used deliberately: constructor injection here would force all six
+ * subclasses to declare a constructor purely to pass the factory upwards.
  */
 public abstract class HibernateDao {
 
     /**
-     * Pinned to the {@code creatoros} unit by name rather than relying on it being the only one.
-     * A DAO for another database must not silently inherit this unit - it declares its own, e.g.
-     * {@code @PersistenceContext(unitName = "audit")}.
+     * The primary ({@code mainSessionFactory}) unit. A DAO for another database must override this
+     * by declaring its own {@code @Qualifier}-ed factory rather than inheriting this one.
      */
-    @PersistenceContext(unitName = DatabaseConfig.CREATOROS_UNIT)
-    private EntityManager entityManager;
+    @Autowired
+    private SessionFactory sessionFactory;
 
-    /** The Hibernate Session bound to the current Spring transaction. */
+    /** The Hibernate Session bound to the current transaction. */
     protected Session session() {
-        return entityManager.unwrap(Session.class);
+        return sessionFactory.getCurrentSession();
     }
 
     /**

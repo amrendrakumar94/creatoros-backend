@@ -1,12 +1,7 @@
 package com.creatoros.controller;
 
-import com.creatoros.dto.deal.BrandDealDto;
-import com.creatoros.dto.deal.BrandDealRequest;
-import com.creatoros.dto.deal.UpdateDealStageRequest;
-import com.creatoros.security.SecurityUtils;
-import com.creatoros.service.BrandDealService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,9 +14,15 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.creatoros.dto.deal.BrandDealDto;
+import com.creatoros.dto.deal.BrandDealRequest;
+import com.creatoros.dto.deal.UpdateDealStageRequest;
+import com.creatoros.security.SecurityUtils;
+import com.creatoros.service.BrandDealService;
 
-/** Brand deals, always scoped to the authenticated creator. */
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
 @RestController
 @RequestMapping("/api/v1/deals")
 @RequiredArgsConstructor
@@ -41,21 +42,17 @@ public class BrandDealController {
 
     @PostMapping
     public ResponseEntity<BrandDealDto> create(@Valid @RequestBody BrandDealRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(brandDealService.create(SecurityUtils.currentCreatorId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(brandDealService.create(SecurityUtils.currentCreatorId(), request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<BrandDealDto> update(@PathVariable Long id,
-                                               @Valid @RequestBody BrandDealRequest request) {
+    public ResponseEntity<BrandDealDto> update(@PathVariable Long id, @Valid @RequestBody BrandDealRequest request) {
         return ResponseEntity.ok(brandDealService.update(SecurityUtils.currentCreatorId(), id, request));
     }
 
     @PatchMapping("/{id}/stage")
-    public ResponseEntity<BrandDealDto> updateStage(@PathVariable Long id,
-                                                    @Valid @RequestBody UpdateDealStageRequest request) {
-        return ResponseEntity.ok(
-                brandDealService.updateStage(SecurityUtils.currentCreatorId(), id, request.stage()));
+    public ResponseEntity<BrandDealDto> updateStage(@PathVariable Long id, @Valid @RequestBody UpdateDealStageRequest request) {
+        return ResponseEntity.ok(brandDealService.updateStage(SecurityUtils.currentCreatorId(), id, request.stage()));
     }
 
     @DeleteMapping("/{id}")

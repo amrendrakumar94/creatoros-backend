@@ -1,5 +1,12 @@
 package com.creatoros.controller;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.creatoros.dto.auth.AuthResponse;
 import com.creatoros.dto.auth.EmailOnlyRequest;
 import com.creatoros.dto.auth.LoginRequest;
@@ -8,14 +15,9 @@ import com.creatoros.dto.auth.ResetPasswordRequest;
 import com.creatoros.dto.auth.SignupRequest;
 import com.creatoros.dto.auth.VerifyOtpRequest;
 import com.creatoros.service.AuthService;
+
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Unauthenticated endpoints. Permitted by SecurityConfig under /api/v1/auth/**.
@@ -52,7 +54,6 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody EmailOnlyRequest request) {
         authService.forgotPassword(request.email());
-        // Always 200, whether or not the address is registered.
         return ResponseEntity.ok(new MessageResponse("If that email is registered, a reset code has been sent.", request.email()));
     }
 

@@ -1,9 +1,8 @@
 package com.creatoros.controller;
 
-import com.creatoros.dto.notification.NotificationDto;
-import com.creatoros.security.SecurityUtils;
-import com.creatoros.service.NotificationService;
-import lombok.RequiredArgsConstructor;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +11,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-import java.util.Map;
+import com.creatoros.dto.notification.NotificationDto;
+import com.creatoros.security.SecurityUtils;
+import com.creatoros.service.NotificationService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
