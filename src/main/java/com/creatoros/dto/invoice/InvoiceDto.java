@@ -7,19 +7,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Serializes to exactly the {@code Invoice} interface in src/types/creatorOS.ts, including the
- * {@code brandGSTIN} / {@code creatorGSTIN} / {@code creatorPAN} casing the UI already reads.
- */
 public record InvoiceDto(
+
         String id,
+
         String invoiceNumber,
+
         String brandName,
 
         @JsonProperty("brandGSTIN")
         String brandGstin,
 
         String brandAddress,
+
         String creatorName,
 
         @JsonProperty("creatorGSTIN")
@@ -29,6 +29,7 @@ public record InvoiceDto(
         String creatorPan,
 
         InvoiceBankDto creatorBankDetails,
+
         LocalDate issueDate,
         LocalDate dueDate,
         List<InvoiceItemDto> items,

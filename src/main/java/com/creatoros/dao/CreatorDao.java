@@ -1,12 +1,11 @@
 package com.creatoros.dao;
 
-import com.creatoros.entity.Creator;
-
 import java.util.Optional;
+
+import com.creatoros.entity.Creator;
 
 public interface CreatorDao {
 
-    /** Persists a new creator or merges a detached one. Always use the returned instance. */
     Creator save(Creator creator);
 
     Optional<Creator> findById(Long id);

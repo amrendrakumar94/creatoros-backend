@@ -1,9 +1,9 @@
 package com.creatoros.dao;
 
-import com.creatoros.entity.Expense;
-
 import java.util.List;
 import java.util.Optional;
+
+import com.creatoros.entity.Expense;
 
 public interface ExpenseDao {
 
@@ -13,6 +13,5 @@ public interface ExpenseDao {
 
     List<Expense> findByCreatorIdOrderByExpenseDateDescIdDesc(Long creatorId);
 
-    /** Scoped lookup: an id belonging to another creator simply is not found. */
     Optional<Expense> findByIdAndCreatorId(Long id, Long creatorId);
 }

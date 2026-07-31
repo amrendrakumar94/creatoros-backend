@@ -1,15 +1,16 @@
 package com.creatoros.daoimpl;
 
-import com.creatoros.entity.Invoice;
-import com.creatoros.entity.InvoiceStatus;
-import com.creatoros.dao.InvoiceDao;
-import org.springframework.stereotype.Repository;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Repository;
+
+import com.creatoros.dao.InvoiceDao;
+import com.creatoros.entity.Invoice;
+import com.creatoros.entity.InvoiceStatus;
 
 @Repository
 public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {
@@ -28,7 +29,6 @@ public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {
         return saved;
     }
 
-    /** Cascades to invoice items via the entity mapping. */
     @Override
     public void delete(Invoice invoice) {
         removeEntity(invoice);
@@ -36,76 +36,49 @@ public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {
 
     @Override
     public List<Invoice> findByCreatorIdOrderByCreatedAtDesc(Long creatorId) {
-        return session()
-                .createSelectionQuery(
-                        "from Invoice i where i.creator.id = :creatorId order by i.createdAt desc",
-                        Invoice.class)
-                .setParameter("creatorId", creatorId)
-                .getResultList();
+        return session().createSelectionQuery("from Invoice i where i.creator.id = :creatorId order by i.createdAt desc", Invoice.class)
+                .setParameter("creatorId", creatorId).getResultList();
     }
 
-    /** Scoped lookup: an id belonging to another creator simply is not found. */
     @Override
     public Optional<Invoice> findByIdAndCreatorId(Long id, Long creatorId) {
-        return session()
-                .createSelectionQuery(
-                        "from Invoice i where i.id = :id and i.creator.id = :creatorId",
-                        Invoice.class)
-                .setParameter("id", id)
-                .setParameter("creatorId", creatorId)
-                .uniqueResultOptional();
+        return session().createSelectionQuery("from Invoice i where i.id = :id and i.creator.id = :creatorId", Invoice.class).setParameter("id", id)
+                .setParameter("creatorId", creatorId).uniqueResultOptional();
     }
 
     @Override
     public long countByCreatorId(Long creatorId) {
-        return session()
-                .createSelectionQuery(
-                        "select count(i.id) from Invoice i where i.creator.id = :creatorId",
-                        Long.class)
-                .setParameter("creatorId", creatorId)
-                .getSingleResult();
+        return session().createSelectionQuery("select count(i.id) from Invoice i where i.creator.id = :creatorId", Long.class)
+                .setParameter("creatorId", creatorId).getSingleResult();
     }
 
     @Override
     public List<Invoice> findByDealId(Long dealId) {
-        return session()
-                .createSelectionQuery("from Invoice i where i.dealId = :dealId", Invoice.class)
-                .setParameter("dealId", dealId)
+        return session().createSelectionQuery("from Invoice i where i.dealId = :dealId", Invoice.class).setParameter("dealId", dealId)
                 .getResultList();
     }
 
-    /** Issued invoices whose due date has passed - candidates to flip to Overdue. */
     @Override
     public List<Invoice> findByStatusInAndDueDateBefore(Collection<InvoiceStatus> statuses, LocalDate date) {
         if (statuses == null || statuses.isEmpty()) {
             return List.of();
         }
-        return session()
-                .createSelectionQuery(
-                        "from Invoice i where i.status in :statuses and i.dueDate < :date",
-                        Invoice.class)
-                .setParameterList("statuses", statuses)
-                .setParameter("date", date)
-                .getResultList();
+        return session().createSelectionQuery("from Invoice i where i.status in :statuses and i.dueDate < :date", Invoice.class)
+                .setParameterList("statuses", statuses).setParameter("date", date).getResultList();
     }
 
     @Override
-    public List<Invoice> findByCreatorIdAndStatusInAndDueDateBefore(
-            Long creatorId, Collection<InvoiceStatus> statuses, LocalDate date) {
+    public List<Invoice> findByCreatorIdAndStatusInAndDueDateBefore(Long creatorId, Collection<InvoiceStatus> statuses, LocalDate date) {
 
         if (statuses == null || statuses.isEmpty()) {
             return List.of();
         }
-        return session()
-                .createSelectionQuery("""
-                        from Invoice i
-                         where i.creator.id = :creatorId
-                           and i.status in :statuses
-                           and i.dueDate < :date
-                        """, Invoice.class)
-                .setParameter("creatorId", creatorId)
-                .setParameterList("statuses", statuses)
-                .setParameter("date", date)
+        return session().createSelectionQuery("""
+                from Invoice i
+                 where i.creator.id = :creatorId
+                   and i.status in :statuses
+                   and i.dueDate < :date
+                """, Invoice.class).setParameter("creatorId", creatorId).setParameterList("statuses", statuses).setParameter("date", date)
                 .getResultList();
     }
 }
