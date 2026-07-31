@@ -1,11 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/** Agreed settlement terms on a brand deal. */
 public enum PaymentTerms {
 
     NET_15("Net 15", 15),
@@ -14,8 +13,7 @@ public enum PaymentTerms {
     SPLIT_50_50("50% Upfront, 50% Post-Publish", 30);
 
     private final String label;
-    /** Days used to derive an invoice due date from its issue date. */
-    private final int netDays;
+    private final int    netDays;
 
     PaymentTerms(String label, int netDays) {
         this.label = label;
@@ -36,9 +34,7 @@ public enum PaymentTerms {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown payment terms: " + value));
     }
 }

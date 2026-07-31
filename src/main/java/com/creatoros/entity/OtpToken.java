@@ -1,5 +1,9 @@
 package com.creatoros.entity;
 
+import java.time.Instant;
+
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,19 +15,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.CreationTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.Instant;
-
-/**
- * A single-use numeric code issued to a creator for signup verification or
- * password reset.
- */
 @Entity
 @Table(name = "otp_token")
 @Getter
@@ -51,7 +48,6 @@ public class OtpToken {
     @Column(name = "expires_at", nullable = false)
     private Instant    expiresAt;
 
-    /** Non-null once redeemed; a consumed token can never be reused. */
     @Column(name = "consumed_at")
     private Instant    consumedAt;
 
@@ -62,7 +58,6 @@ public class OtpToken {
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private Instant    createdAt;
-
 
     public boolean isConsumed() {
         return consumedAt != null;

@@ -1,11 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/** Content format promised to a brand. */
 public enum DeliverableType {
 
     YOUTUBE_DEDICATED("YouTube Dedicated"),
@@ -31,9 +30,7 @@ public enum DeliverableType {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown deliverable type: " + value));
     }
 }

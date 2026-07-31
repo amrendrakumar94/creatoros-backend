@@ -8,10 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Payout details, embedded into {@link Creator} and snapshotted onto invoices
- * later.
- */
 @Embeddable
 @Getter
 @Setter
@@ -32,7 +28,6 @@ public class BankDetails {
     @Column(name = "upi_id", length = 100)
     private String upiId;
 
-    /** Only set for creators taking international payouts. */
     @Column(name = "swift_code", length = 20)
     private String swiftCode;
 }

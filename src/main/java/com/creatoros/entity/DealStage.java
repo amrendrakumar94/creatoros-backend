@@ -1,11 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/** Pipeline stage of a brand deal. Labels match {@code DealStage} in src/types/creatorOS.ts. */
 public enum DealStage {
 
     LEAD("Lead"),
@@ -31,9 +30,7 @@ public enum DealStage {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(s -> s.label.equalsIgnoreCase(value) || s.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(s -> s.label.equalsIgnoreCase(value) || s.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown deal stage: " + value));
     }
 }

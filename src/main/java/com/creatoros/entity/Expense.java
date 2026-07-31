@@ -1,5 +1,12 @@
 package com.creatoros.entity;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,19 +18,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.time.LocalDate;
-
-/** A business cost, and the GST input tax credit claimable against it. */
 @Entity
 @Table(name = "expense")
 @Getter
@@ -35,62 +35,59 @@ public class Expense {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long            id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "creator_id", nullable = false)
-    private Creator creator;
+    private Creator         creator;
 
     @Column(nullable = false, length = 300)
-    private String title;
+    private String          title;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
     private ExpenseCategory category;
 
-    /** GST-inclusive amount actually paid. */
     @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
+    private BigDecimal      amount;
 
     @Column(name = "expense_date", nullable = false)
-    private LocalDate expenseDate;
+    private LocalDate       expenseDate;
 
     @Column(length = 200)
-    private String vendor;
+    private String          vendor;
 
     @Column(length = 15)
-    private String gstin;
+    private String          gstin;
 
     @Column(name = "has_gst_invoice", nullable = false)
     @Builder.Default
-    private boolean hasGstInvoice = false;
+    private boolean         hasGstInvoice      = false;
 
-    /** Server-computed ITC; zero without a valid GST invoice from the vendor. */
     @Column(name = "gst_claimable_amount", nullable = false, precision = 15, scale = 2)
     @Builder.Default
-    private BigDecimal gstClaimableAmount = BigDecimal.ZERO;
+    private BigDecimal      gstClaimableAmount = BigDecimal.ZERO;
 
     @Column(name = "receipt_url", length = 500)
-    private String receiptUrl;
+    private String          receiptUrl;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", nullable = false, length = 50)
-    private PaymentMethod paymentMethod;
+    private PaymentMethod   paymentMethod;
 
     @Column(columnDefinition = "TEXT")
-    private String notes;
+    private String          notes;
 
     @Column(name = "tax_deductible", nullable = false)
     @Builder.Default
-    private boolean taxDeductible = true;
+    private boolean         taxDeductible      = true;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant createdAt;
+    private Instant         createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
-
+    private Instant         updatedAt;
 
 }

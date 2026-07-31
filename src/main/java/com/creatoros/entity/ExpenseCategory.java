@@ -1,9 +1,9 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-
-import java.util.Arrays;
 
 public enum ExpenseCategory {
 
@@ -30,9 +30,7 @@ public enum ExpenseCategory {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(c -> c.label.equalsIgnoreCase(value) || c.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(c -> c.label.equalsIgnoreCase(value) || c.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown expense category: " + value));
     }
 }

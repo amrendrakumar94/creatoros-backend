@@ -1,5 +1,13 @@
 package com.creatoros.entity;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -13,26 +21,12 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-import java.time.Instant;
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-/**
- * A creator account: authentication identity and business profile in one row.
- *
- * <p>
- * This is the tenant root. Every other domain table added in later phases
- * carries a {@code creator_id} foreign key back to this table.
- */
 @Entity
 @Table(name = "creator")
 @Getter
@@ -63,9 +57,6 @@ public class Creator {
     @Column(nullable = false, length = 150)
     private String            name;
 
-    /**
-     * Public handle, stored with the leading '@'. Unique across the platform.
-     */
     @Column(nullable = false, unique = true, length = 100)
     private String            handle;
 
@@ -102,7 +93,6 @@ public class Creator {
     @Column(length = 500)
     private String            address;
 
-    /** Free-text "City, State" - the UI treats this as one field. */
     @Column(length = 120)
     private String            city;
 
@@ -131,6 +121,5 @@ public class Creator {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private Instant           updatedAt;
-
 
 }

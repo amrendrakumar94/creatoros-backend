@@ -1,5 +1,7 @@
 package com.creatoros.entity;
 
+import java.time.LocalDate;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,9 +19,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDate;
-
-/** A single piece of content owed under a {@link BrandDeal}. */
 @Entity
 @Table(name = "deliverable_item")
 @Getter
@@ -31,31 +30,31 @@ public class DeliverableItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long              id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "deal_id", nullable = false)
-    private BrandDeal deal;
+    private BrandDeal         deal;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
-    private DeliverableType type;
+    private DeliverableType   type;
 
     @Column(length = 300)
-    private String title;
+    private String            title;
 
     @Column(name = "due_date")
-    private LocalDate dueDate;
+    private LocalDate         dueDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 40)
     @Builder.Default
-    private DeliverableStatus status = DeliverableStatus.PENDING;
+    private DeliverableStatus status    = DeliverableStatus.PENDING;
 
     @Column(length = 500)
-    private String link;
+    private String            link;
 
     @Column(name = "sort_order", nullable = false)
     @Builder.Default
-    private int sortOrder = 0;
+    private int               sortOrder = 0;
 }

@@ -1,17 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/**
- * The creator's content niche, selected during onboarding.
- *
- * <p>
- * Labels match {@code CreatorType} in the frontend's
- * {@code src/types/creatorOS.ts} verbatim.
- */
 public enum CreatorType {
 
     TECH_REVIEWER("Tech Reviewer"),

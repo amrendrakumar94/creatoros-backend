@@ -1,11 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/** Production state of a single deliverable. */
 public enum DeliverableStatus {
 
     PENDING("Pending"),
@@ -30,9 +29,7 @@ public enum DeliverableStatus {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(s -> s.label.equalsIgnoreCase(value) || s.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(s -> s.label.equalsIgnoreCase(value) || s.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown deliverable status: " + value));
     }
 }

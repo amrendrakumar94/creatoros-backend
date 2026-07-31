@@ -1,19 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/**
- * Social platforms a creator publishes on.
- *
- * <p>
- * The enum constant is what JPA persists; {@link #getLabel()} is what crosses
- * the wire, so the API speaks exactly the strings declared by
- * {@code PlatformType} in the frontend's {@code src/types/creatorOS.ts} and
- * that file needs no changes.
- */
 public enum PlatformType {
 
     YOUTUBE("YouTube"),

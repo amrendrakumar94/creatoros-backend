@@ -8,12 +8,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Payout details copied onto the invoice when it is raised.
- *
- * <p>Separate from {@link BankDetails} because an invoice never carries a SWIFT code and must not
- * change when the creator later edits their profile.
- */
 @Embeddable
 @Getter
 @Setter

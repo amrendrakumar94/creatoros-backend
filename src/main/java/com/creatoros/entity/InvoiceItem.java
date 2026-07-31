@@ -1,5 +1,7 @@
 package com.creatoros.entity;
 
+import java.math.BigDecimal;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,9 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
-/** A single line on a tax invoice. */
 @Entity
 @Table(name = "invoice_item")
 @Getter
@@ -29,22 +28,21 @@ public class InvoiceItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long       id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "invoice_id", nullable = false)
-    private Invoice invoice;
+    private Invoice    invoice;
 
     @Column(length = 500)
-    private String description;
+    private String     description;
 
-    /** Services Accounting Code, e.g. 998361 for advertising services. */
     @Column(name = "sac_code", length = 20)
-    private String sacCode;
+    private String     sacCode;
 
     @Column(nullable = false)
     @Builder.Default
-    private int quantity = 1;
+    private int        quantity  = 1;
 
     @Column(name = "unit_price", nullable = false, precision = 15, scale = 2)
     private BigDecimal unitPrice;
@@ -54,5 +52,5 @@ public class InvoiceItem {
 
     @Column(name = "sort_order", nullable = false)
     @Builder.Default
-    private int sortOrder = 0;
+    private int        sortOrder = 0;
 }

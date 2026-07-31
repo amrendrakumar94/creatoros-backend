@@ -1,11 +1,10 @@
 package com.creatoros.entity;
 
+import java.util.Arrays;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-import java.util.Arrays;
-
-/** Lower-case labels, matching {@code NotificationItem['type']} in the frontend. */
 public enum NotificationType {
 
     PAYMENT("payment"),
@@ -30,9 +29,7 @@ public enum NotificationType {
         if (value == null || value.isBlank()) {
             return null;
         }
-        return Arrays.stream(values())
-                .filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value))
-                .findFirst()
+        return Arrays.stream(values()).filter(t -> t.label.equalsIgnoreCase(value) || t.name().equalsIgnoreCase(value)).findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Unknown notification type: " + value));
     }
 }
