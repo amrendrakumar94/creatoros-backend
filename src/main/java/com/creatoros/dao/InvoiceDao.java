@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.creatoros.entity.Invoice;
-import com.creatoros.entity.InvoiceStatus;
+import com.creatoros.enums.InvoiceStatus;
 
 public interface InvoiceDao {
 

@@ -9,8 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.creatoros.dao.InvoiceDao;
 import com.creatoros.entity.Invoice;
-import com.creatoros.entity.InvoiceStatus;
-import com.creatoros.entity.NotificationType;
+import com.creatoros.enums.InvoiceStatus;
+import com.creatoros.enums.NotificationType;
 import com.creatoros.service.InvoiceOverdueService;
 import com.creatoros.service.NotificationService;
 

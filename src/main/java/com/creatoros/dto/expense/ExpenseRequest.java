@@ -3,8 +3,8 @@ package com.creatoros.dto.expense;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-import com.creatoros.entity.ExpenseCategory;
-import com.creatoros.entity.PaymentMethod;
+import com.creatoros.enums.ExpenseCategory;
+import com.creatoros.enums.PaymentMethod;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

@@ -8,7 +8,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.CreatorStatus;
+import com.creatoros.enums.CreatorStatus;
 
 import lombok.Getter;
 

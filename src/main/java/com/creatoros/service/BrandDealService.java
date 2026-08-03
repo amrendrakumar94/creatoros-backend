@@ -4,7 +4,7 @@ import java.util.List;
 
 import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.BrandDealRequest;
-import com.creatoros.entity.DealStage;
+import com.creatoros.enums.DealStage;
 
 public interface BrandDealService {
 

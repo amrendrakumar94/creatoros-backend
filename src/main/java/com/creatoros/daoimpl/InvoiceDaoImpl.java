@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import com.creatoros.dao.InvoiceDao;
 import com.creatoros.entity.Invoice;
-import com.creatoros.entity.InvoiceStatus;
+import com.creatoros.enums.InvoiceStatus;
 
 @Repository
 public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {

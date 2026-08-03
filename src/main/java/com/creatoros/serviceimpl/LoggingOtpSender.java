@@ -3,7 +3,7 @@ package com.creatoros.serviceimpl;
 import org.springframework.stereotype.Service;
 
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.OtpPurpose;
+import com.creatoros.enums.OtpPurpose;
 import com.creatoros.service.OtpSender;
 
 import lombok.extern.slf4j.Slf4j;

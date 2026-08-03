@@ -3,7 +3,7 @@ package com.creatoros.dto.invoice;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.creatoros.entity.InvoiceStatus;
+import com.creatoros.enums.InvoiceStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.Valid;

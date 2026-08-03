@@ -4,9 +4,9 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.creatoros.entity.DealStage;
-import com.creatoros.entity.PaymentTerms;
-import com.creatoros.entity.PlatformType;
+import com.creatoros.enums.DealStage;
+import com.creatoros.enums.PaymentTerms;
+import com.creatoros.enums.PlatformType;
 
 public record BrandDealDto(
 

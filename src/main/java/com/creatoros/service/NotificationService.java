@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.creatoros.dto.notification.NotificationDto;
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.NotificationType;
+import com.creatoros.enums.NotificationType;
 
 public interface NotificationService {
 

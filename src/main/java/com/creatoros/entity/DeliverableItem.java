@@ -18,6 +18,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.creatoros.enums.DeliverableStatus;
+import com.creatoros.enums.DeliverableType;
 
 @Entity
 @Table(name = "deliverable_item")

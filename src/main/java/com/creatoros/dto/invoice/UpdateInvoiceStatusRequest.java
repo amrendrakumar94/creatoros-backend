@@ -2,7 +2,7 @@ package com.creatoros.dto.invoice;
 
 import java.time.LocalDate;
 
-import com.creatoros.entity.InvoiceStatus;
+import com.creatoros.enums.InvoiceStatus;
 
 import jakarta.validation.constraints.NotNull;
 

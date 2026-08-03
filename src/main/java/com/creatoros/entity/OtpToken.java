@@ -20,6 +20,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.creatoros.enums.OtpPurpose;
 
 @Entity
 @Table(name = "otp_token")

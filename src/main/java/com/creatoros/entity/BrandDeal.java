@@ -33,6 +33,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.creatoros.enums.DealStage;
+import com.creatoros.enums.PaymentTerms;
+import com.creatoros.enums.PlatformType;
 
 @Entity
 @Table(name = "brand_deal")

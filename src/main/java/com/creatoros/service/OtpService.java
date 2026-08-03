@@ -1,7 +1,7 @@
 package com.creatoros.service;
 
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.OtpPurpose;
+import com.creatoros.enums.OtpPurpose;
 
 public interface OtpService {
 

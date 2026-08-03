@@ -1,4 +1,4 @@
-package com.creatoros.entity;
+package com.creatoros.enums;
 
 import java.util.Arrays;
 

@@ -23,6 +23,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.creatoros.enums.ExpenseCategory;
+import com.creatoros.enums.PaymentMethod;
 
 @Entity
 @Table(name = "expense")

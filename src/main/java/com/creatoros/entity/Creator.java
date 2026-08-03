@@ -26,6 +26,10 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.creatoros.enums.CreatorStatus;
+import com.creatoros.enums.CreatorType;
+import com.creatoros.enums.PlatformType;
+import com.creatoros.enums.Role;
 
 @Entity
 @Table(name = "creator")

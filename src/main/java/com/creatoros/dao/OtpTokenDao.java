@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Optional;
 
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.OtpPurpose;
+import com.creatoros.enums.OtpPurpose;
 import com.creatoros.entity.OtpToken;
 
 public interface OtpTokenDao {

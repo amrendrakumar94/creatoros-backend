@@ -10,7 +10,7 @@ import com.creatoros.dao.NotificationDao;
 import com.creatoros.dto.notification.NotificationDto;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Notification;
-import com.creatoros.entity.NotificationType;
+import com.creatoros.enums.NotificationType;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.NotificationService;
 

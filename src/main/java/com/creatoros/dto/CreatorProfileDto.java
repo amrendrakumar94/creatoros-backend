@@ -3,8 +3,8 @@ package com.creatoros.dto;
 import java.math.BigDecimal;
 import java.util.List;
 
-import com.creatoros.entity.CreatorType;
-import com.creatoros.entity.PlatformType;
+import com.creatoros.enums.CreatorType;
+import com.creatoros.enums.PlatformType;
 
 public record CreatorProfileDto(
 

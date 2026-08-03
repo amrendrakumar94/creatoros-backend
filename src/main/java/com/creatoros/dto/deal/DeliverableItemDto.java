@@ -2,8 +2,8 @@ package com.creatoros.dto.deal;
 
 import java.time.LocalDate;
 
-import com.creatoros.entity.DeliverableStatus;
-import com.creatoros.entity.DeliverableType;
+import com.creatoros.enums.DeliverableStatus;
+import com.creatoros.enums.DeliverableType;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;

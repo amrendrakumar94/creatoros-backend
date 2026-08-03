@@ -1,4 +1,4 @@
-package com.creatoros.entity;
+package com.creatoros.enums;
 
 /** Lifecycle of a creator account. */
 public enum CreatorStatus {

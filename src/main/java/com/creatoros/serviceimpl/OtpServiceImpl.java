@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.creatoros.config.AppProperties;
 import com.creatoros.dao.OtpTokenDao;
 import com.creatoros.entity.Creator;
-import com.creatoros.entity.OtpPurpose;
+import com.creatoros.enums.OtpPurpose;
 import com.creatoros.entity.OtpToken;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.service.OtpSender;

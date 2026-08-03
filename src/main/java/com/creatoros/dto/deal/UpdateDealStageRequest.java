@@ -1,6 +1,6 @@
 package com.creatoros.dto.deal;
 
-import com.creatoros.entity.DealStage;
+import com.creatoros.enums.DealStage;
 import jakarta.validation.constraints.NotNull;
 
 public record UpdateDealStageRequest(

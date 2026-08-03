@@ -3,7 +3,7 @@ package com.creatoros.dto.notification;
 import java.math.BigDecimal;
 import java.time.Instant;
 
-import com.creatoros.entity.NotificationType;
+import com.creatoros.enums.NotificationType;
 
 public record NotificationDto(
 

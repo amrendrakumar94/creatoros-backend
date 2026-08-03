@@ -1,6 +1,6 @@
 package com.creatoros.dto.invoice;
 
-import com.creatoros.entity.InvoiceStatus;
+import com.creatoros.enums.InvoiceStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
