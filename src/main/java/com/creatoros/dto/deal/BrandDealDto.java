@@ -44,7 +44,5 @@ public record BrandDealDto(
 
         PaymentTerms paymentTerms,
 
-        String invoiceId,
-
         List<String> tags) {
 }

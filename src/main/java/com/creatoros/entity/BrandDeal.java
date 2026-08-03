@@ -113,10 +113,6 @@ public class BrandDeal {
     @Builder.Default
     private PaymentTerms          paymentTerms = PaymentTerms.NET_30;
 
-    /** Set once an invoice is raised against this deal. */
-    @Column(name = "invoice_id")
-    private Long                  invoiceId;
-
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "deal_tag", joinColumns = @JoinColumn(name = "deal_id"))
     @Column(name = "tag", nullable = false, length = 60)

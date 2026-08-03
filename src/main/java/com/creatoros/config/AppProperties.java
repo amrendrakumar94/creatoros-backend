@@ -15,18 +15,9 @@ import lombok.Setter;
 @Setter
 public class AppProperties {
 
-    private Jwt        jwt     = new Jwt();
-    private Otp        otp     = new Otp();
-    private Cors       cors    = new Cors();
-    private InvoiceJob invoice = new InvoiceJob();
-
-    @Getter
-    @Setter
-    public static class InvoiceJob {
-        /** Cron for the nightly overdue sweep. */
-        private String overdueCron = "0 15 0 * * *";
-        private String timezone    = "Asia/Kolkata";
-    }
+    private Jwt  jwt  = new Jwt();
+    private Otp  otp  = new Otp();
+    private Cors cors = new Cors();
 
     @Getter
     @Setter

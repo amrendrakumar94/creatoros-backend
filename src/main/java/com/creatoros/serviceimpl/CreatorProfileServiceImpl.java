@@ -57,7 +57,7 @@ public class CreatorProfileServiceImpl implements CreatorProfileService {
         applyIfPresent(request.teamSize(), creator::setTeamSize);
         applyIfPresent(request.monthlyRevenueEstimate(), creator::setMonthlyRevenueEstimate);
 
-        // GSTIN/PAN are stored uppercase so the invoice module can rely on a
+        // GSTIN/PAN are stored uppercase so downstream consumers can rely on a
         // canonical form.
         applyIfPresent(request.gstin(), value -> creator.setGstin(value.toUpperCase()));
         applyIfPresent(request.pan(), value -> creator.setPan(value.toUpperCase()));

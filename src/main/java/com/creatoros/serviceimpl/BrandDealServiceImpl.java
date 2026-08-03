@@ -18,12 +18,10 @@ import com.creatoros.entity.Creator;
 import com.creatoros.enums.DealStage;
 import com.creatoros.entity.DeliverableItem;
 import com.creatoros.enums.DeliverableStatus;
-import com.creatoros.enums.NotificationType;
 import com.creatoros.enums.PaymentTerms;
 import com.creatoros.entity.UsageRights;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.BrandDealService;
-import com.creatoros.service.NotificationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +33,6 @@ public class BrandDealServiceImpl implements BrandDealService {
 
     private final BrandDealDao        brandDealDao;
     private final CreatorDao          creatorDao;
-    private final NotificationService notificationService;
     private final DomainMapper        domainMapper;
 
     @Override
@@ -86,17 +83,8 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Transactional
     public BrandDealDto updateStage(Long creatorId, Long dealId, DealStage stage) {
         BrandDeal deal = requireDeal(creatorId, dealId);
-        DealStage previous = deal.getStage();
         deal.setStage(stage);
         brandDealDao.save(deal);
-
-        if (stage == DealStage.PAYMENT_RECEIVED && previous != DealStage.PAYMENT_RECEIVED) {
-            notificationService.record(deal.getCreator(), NotificationType.DEAL, "Deal closed: " + deal.getBrandName(),
-                    "%s reached Payment Received.".formatted(
-                            deal.getCampaignTitle() == null || deal.getCampaignTitle().isBlank() ? deal.getDealNumber() : deal.getCampaignTitle()),
-                    "deals", deal.getAmount());
-        }
-
         return domainMapper.toDealDto(deal);
     }
 
