@@ -54,12 +54,6 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(HttpStatus.UNAUTHORIZED, ex.getMessage(), "INVALID_CREDENTIALS", request.getRequestURI()));
     }
 
-    @ExceptionHandler(AccountNotVerifiedException.class)
-    public ResponseEntity<ApiError> handleNotVerified(AccountNotVerifiedException ex, HttpServletRequest request) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(ApiError.of(HttpStatus.FORBIDDEN, ex.getMessage(), "ACCOUNT_NOT_VERIFIED", request.getRequestURI()));
-    }
-
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(
