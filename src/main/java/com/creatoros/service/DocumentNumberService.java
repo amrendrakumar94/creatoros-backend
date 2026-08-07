@@ -6,5 +6,5 @@ public interface DocumentNumberService {
 
     String nextDealNumber(Long creatorId, LocalDate on);
 
-    String nextInvoiceNumber(Long creatorId, LocalDate on);
+    DocumentNumber nextInvoiceNumber(Long creatorId, LocalDate on);
 }

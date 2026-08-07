@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.creatoros.dao.DocumentCounterDao;
 import com.creatoros.enums.DocumentType;
+import com.creatoros.service.DocumentNumber;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentNumberServiceImplTest {
@@ -56,10 +57,11 @@ class DocumentNumberServiceImplTest {
     void invoiceNumberFitsGstLimit() {
         when(documentCounterDao.nextSequence(CREATOR, DocumentType.INVOICE, "2026-27")).thenReturn(7);
 
-        String number = service.nextInvoiceNumber(CREATOR, LocalDate.parse("2026-08-08"));
+        DocumentNumber number = service.nextInvoiceNumber(CREATOR, LocalDate.parse("2026-08-08"));
 
-        assertThat(number).isEqualTo("INV/2026-27/007");
-        assertThat(number).hasSizeLessThanOrEqualTo(16);
+        assertThat(number.value()).isEqualTo("INV/2026-27/007").hasSizeLessThanOrEqualTo(16);
+        assertThat(number.sequence()).isEqualTo(7);
+        assertThat(number.financialYear()).isEqualTo("2026-27");
     }
 
     @Test
@@ -67,7 +69,16 @@ class DocumentNumberServiceImplTest {
     void invoiceNumberStaysLegalAtFourDigits() {
         when(documentCounterDao.nextSequence(CREATOR, DocumentType.INVOICE, "2026-27")).thenReturn(1234);
 
-        assertThat(service.nextInvoiceNumber(CREATOR, LocalDate.parse("2026-08-08"))).isEqualTo("INV/2026-27/1234").hasSizeLessThanOrEqualTo(16);
+        assertThat(service.nextInvoiceNumber(CREATOR, LocalDate.parse("2026-08-08")).value()).isEqualTo("INV/2026-27/1234")
+                .hasSizeLessThanOrEqualTo(16);
+    }
+
+    @Test
+    @DisplayName("returns the allocated sequence so the invoice can persist it for its unique key")
+    void exposesAllocatedSequence() {
+        when(documentCounterDao.nextSequence(CREATOR, DocumentType.INVOICE, "2026-27")).thenReturn(2);
+
+        assertThat(service.nextInvoiceNumber(CREATOR, LocalDate.parse("2026-08-08")).sequence()).isEqualTo(2);
     }
 
     @Test
