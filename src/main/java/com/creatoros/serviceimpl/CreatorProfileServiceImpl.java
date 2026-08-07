@@ -53,6 +53,8 @@ public class CreatorProfileServiceImpl implements CreatorProfileService {
         applyIfPresent(request.tradeName(), creator::setTradeName);
         applyIfPresent(request.address(), creator::setAddress);
         applyIfPresent(request.city(), creator::setCity);
+        applyIfPresent(request.state(), creator::setState);
+        applyIfPresent(request.stateCode(), creator::setStateCode);
         applyIfPresent(request.pincode(), creator::setPincode);
         applyIfPresent(request.teamSize(), creator::setTeamSize);
         applyIfPresent(request.monthlyRevenueEstimate(), creator::setMonthlyRevenueEstimate);

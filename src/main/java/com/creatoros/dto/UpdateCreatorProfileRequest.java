@@ -35,6 +35,10 @@ public record UpdateCreatorProfileRequest(
 
         @Size(max = 120) String city,
 
+        @Size(max = 60) String state,
+
+        @Pattern(regexp = "^$|^(0[1-9]|[12][0-9]|3[0-8]|97)$", message = "State code must be a valid 2-digit GST state code") String stateCode,
+
         @Pattern(regexp = "^$|^[1-9][0-9]{5}$", message = "Pincode must be 6 digits") String pincode,
 
         @PositiveOrZero(message = "Monthly revenue estimate cannot be negative") BigDecimal monthlyRevenueEstimate,

@@ -34,6 +34,10 @@ public record CreatorProfileDto(
 
         String city,
 
+        String state,
+
+        String stateCode,
+
         String pincode,
 
         BigDecimal monthlyRevenueEstimate,

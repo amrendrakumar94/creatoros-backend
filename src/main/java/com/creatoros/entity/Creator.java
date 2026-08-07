@@ -1,7 +1,7 @@
 package com.creatoros.entity;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -100,6 +100,12 @@ public class Creator {
     @Column(length = 120)
     private String            city;
 
+    @Column(length = 60)
+    private String            state;
+
+    @Column(name = "state_code", length = 2)
+    private String            stateCode;
+
     @Column(length = 10)
     private String            pincode;
 
@@ -120,10 +126,10 @@ public class Creator {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant           createdAt;
+    private Timestamp         createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant           updatedAt;
+    private Timestamp         updatedAt;
 
 }

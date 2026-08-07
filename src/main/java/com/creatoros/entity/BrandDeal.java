@@ -1,13 +1,14 @@
 package com.creatoros.entity;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -96,8 +97,9 @@ public class BrandDeal {
     @Column(name = "end_date")
     private LocalDate             endDate;
 
-    @OneToMany(mappedBy = "deal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "deal", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC, id ASC")
+    @BatchSize(size = 50)
     @Builder.Default
     private List<DeliverableItem> deliverables = new ArrayList<>();
 
@@ -113,19 +115,20 @@ public class BrandDeal {
     @Builder.Default
     private PaymentTerms          paymentTerms = PaymentTerms.NET_30;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "deal_tag", joinColumns = @JoinColumn(name = "deal_id"))
     @Column(name = "tag", nullable = false, length = 60)
+    @BatchSize(size = 50)
     @Builder.Default
     private Set<String>           tags         = new LinkedHashSet<>();
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant               createdAt;
+    private Timestamp             createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant               updatedAt;
+    private Timestamp             updatedAt;
 
     /** Keeps both sides of the association consistent. */
     public void addDeliverable(DeliverableItem item) {

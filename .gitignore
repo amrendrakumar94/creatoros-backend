@@ -1,0 +1,16 @@
+# Maven build output
+target/
+
+# IDE
+.idea
+
+# Rolling application logs (see logback.xml)
+logs/
+
+.DS_Store
+
+# Confidential founder documents
+*.docx
+
+# Local container secrets (commit .env.example instead)
+.env

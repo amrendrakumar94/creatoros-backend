@@ -17,7 +17,8 @@ public class CreatorMapper {
         return new CreatorProfileDto(creator.getName(), creator.getHandle(), creator.getAvatar(), creator.getEmail(), creator.getPhone(),
                 creator.getCreatorType(), creator.getPlatforms() == null ? List.of() : new ArrayList<>(creator.getPlatforms()),
                 creator.isGstRegistered(), creator.getGstin(), creator.getPan(), creator.getTradeName(), creator.getAddress(), creator.getCity(),
-                creator.getPincode(), creator.getMonthlyRevenueEstimate(), toBankDetailsDto(creator.getBankDetails()), creator.getTeamSize());
+                creator.getState(), creator.getStateCode(), creator.getPincode(), creator.getMonthlyRevenueEstimate(),
+                toBankDetailsDto(creator.getBankDetails()), creator.getTeamSize());
     }
 
     private BankDetailsDto toBankDetailsDto(BankDetails bank) {
