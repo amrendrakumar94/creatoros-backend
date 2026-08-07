@@ -1,7 +1,7 @@
 package com.creatoros.entity;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -126,10 +126,10 @@ public class Creator {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant           createdAt;
+    private Timestamp         createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant           updatedAt;
+    private Timestamp         updatedAt;
 
 }

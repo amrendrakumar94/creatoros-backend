@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: creatoros-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-creatoros}
+      MYSQL_USER: ${DB_USER:-creatoros}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-creatoros}
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: creatoros-backend:local
+    container_name: creatoros-api
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      SPRING_MAIN_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-creatoros}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_MAIN_DATASOURCE_USERNAME: ${DB_USER:-creatoros}
+      SPRING_MAIN_DATASOURCE_PASSWORD: ${DB_PASSWORD:-creatoros}
+      SPRING_MAIN_DATASOURCE_MAXIMUM_POOL_SIZE: ${DB_POOL_MAX:-10}
+      SPRING_MAIN_DATASOURCE_MINIMUM_IDLE: ${DB_POOL_MIN:-2}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?set APP_JWT_SECRET in .env - see .env.example}
+      APP_JWT_EXPIRATION_MS: ${APP_JWT_EXPIRATION_MS:-604800000}
+      APP_CORS_ALLOWED_ORIGINS: ${APP_CORS_ALLOWED_ORIGINS:-http://localhost:3000,http://localhost:5173}
+      LOG_DIR: /var/log/creatoros
+      TZ: Asia/Kolkata
+    ports:
+      - "${API_PORT:-8082}:8082"
+    volumes:
+      - api-logs:/var/log/creatoros
+
+volumes:
+  mysql-data:
+  api-logs:

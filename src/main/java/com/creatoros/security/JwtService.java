@@ -1,6 +1,6 @@
 package com.creatoros.security;
 
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
 
@@ -37,15 +37,16 @@ public class JwtService {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
     }
 
-    public Instant expiryFromNow() {
-        return Instant.now().plusMillis(appProperties.getJwt().getExpirationMs());
+    public Timestamp expiryFromNow() {
+        return new Timestamp(System.currentTimeMillis() + appProperties.getJwt().getExpirationMs());
     }
 
     public String generateToken(Creator creator) {
-        Instant now = Instant.now();
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        Timestamp expiresAt = new Timestamp(now.getTime() + appProperties.getJwt().getExpirationMs());
         return Jwts.builder().subject(String.valueOf(creator.getId())).claim(CLAIM_EMAIL, creator.getEmail())
-                .claim(CLAIM_ROLE, creator.getRole().name()).issuedAt(Date.from(now))
-                .expiration(Date.from(now.plusMillis(appProperties.getJwt().getExpirationMs()))).signWith(signingKey()).compact();
+                .claim(CLAIM_ROLE, creator.getRole().name()).issuedAt(new Date(now.getTime())).expiration(new Date(expiresAt.getTime()))
+                .signWith(signingKey()).compact();
     }
 
     public Optional<Long> extractCreatorId(String token) {

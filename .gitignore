@@ -11,3 +11,6 @@ logs/
 
 # Confidential founder documents
 *.docx
+
+# Local container secrets (commit .env.example instead)
+.env

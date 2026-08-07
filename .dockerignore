@@ -1,0 +1,13 @@
+target/
+logs/
+.git/
+.gitignore
+.idea/
+*.iml
+.DS_Store
+*.docx
+Dockerfile
+.dockerignore
+docker-compose.yml
+.env
+CLAUDE.md

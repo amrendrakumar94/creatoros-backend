@@ -117,7 +117,7 @@ app will not start.** `V1__init_schema.sql` is the baseline; `baseline-on-migrat
 
 Conventions from `V1`: `BIGINT AUTO_INCREMENT` ids, `snake_case` columns, enums stored as
 `VARCHAR` of the constant name (`@Enumerated(EnumType.STRING)` — the label mapping is JSON-only),
-booleans as `BIT(1)`, money as `DECIMAL(15,2)`, timestamps as `DATETIME(6)` driven by
+booleans as `BIT(1)`, money as `DECIMAL(15,2)`, timestamps as `TIMESTAMP(6)` driven by
 `@CreationTimestamp`/`@UpdateTimestamp`, `ON DELETE CASCADE` FKs to `creator`, and an index on every
 `creator_id`.
 

@@ -1,7 +1,7 @@
 package com.creatoros.entity;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -181,11 +181,11 @@ public class Invoice {
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
-    private Instant               createdAt;
+    private Timestamp             createdAt;
 
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
-    private Instant               updatedAt;
+    private Timestamp             updatedAt;
 
     public void addLineItem(InvoiceLineItem item) {
         item.setInvoice(this);
