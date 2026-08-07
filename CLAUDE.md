@@ -9,14 +9,25 @@ MySQL, Flyway, JWT auth. Serves a separate frontend; DTO shapes mirror that app'
 
 ## Commands
 
+**Java 21 is required and is not the machine default.** `sdk current java` resolves to a 17 JDK, and
+sdkman has no 21 installed, so a bare `./mvnw` fails with `release version 21 not supported`. Either
+install one (`sdk install java 21.0.12-amzn && sdk use java 21.0.12-amzn`) or point Maven at the
+Corretto 21 already on the machine:
+
+```bash
+export JAVA_HOME=/Users/Amrendra/Library/Java/JavaVirtualMachines/corretto-21.0.12/Contents/Home
+```
+
+Beware: `./mvnw compile` exits 0 on the wrong JDK when `target/classes` is already populated by the
+IDE, because Maven skips javac as up to date. Use `./mvnw clean test` to actually prove a build.
+
 ```bash
 ./mvnw spring-boot:run          # run on http://localhost:8082
 ./mvnw clean package            # build the fat jar into target/
-./mvnw compile                  # fast compile check
+./mvnw clean test               # full build + tests
+./mvnw test -Dtest=GstCalculationServiceTest            # single class
+./mvnw test -Dtest=GstCalculationServiceTest#roundsHalfUpToPaise   # single method
 ```
-
-There is no `src/test` yet. Once tests exist: `./mvnw test`, single test
-`./mvnw test -Dtest=ClassName#methodName`.
 
 Requires a local MySQL `creatoros` database reachable at `localhost:3306` (root/root per
 `application.properties`). Startup fails hard if the schema doesn't match the entities — see Database below.
