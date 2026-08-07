@@ -28,6 +28,10 @@ public enum InvoiceStatus {
         return this == SENT || this == PARTIALLY_PAID;
     }
 
+    public boolean isIssued() {
+        return this == SENT || this == PARTIALLY_PAID || this == PAID;
+    }
+
     @JsonCreator
     public static InvoiceStatus fromLabel(String value) {
         if (value == null || value.isBlank()) {

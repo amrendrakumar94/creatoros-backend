@@ -14,7 +14,17 @@ public final class FinancialYear {
     }
 
     public static String labelOf(LocalDate date) {
-        int startYear = startYearOf(date);
+        return labelOfStartYear(startYearOf(date));
+    }
+
+    public static String labelOfStartYear(int startYear) {
         return "%d-%02d".formatted(startYear, (startYear + 1) % 100);
+    }
+
+    public static int startYearOfLabel(String label) {
+        if (label == null || !label.matches("\\d{4}-\\d{2}")) {
+            throw new IllegalArgumentException("Financial year must look like 2026-27, got: " + label);
+        }
+        return Integer.parseInt(label.substring(0, 4));
     }
 }

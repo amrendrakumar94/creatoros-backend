@@ -22,4 +22,12 @@ public class InvoicePaymentDaoImpl extends HibernateDao implements InvoicePaymen
                         InvoicePayment.class)
                 .setParameter("invoiceId", invoiceId).getResultList();
     }
+
+    @Override
+    public List<InvoicePayment> findByCreatorIdOrderByReceivedOnAscIdAsc(Long creatorId) {
+        return session()
+                .createSelectionQuery("from InvoicePayment p where p.creator.id = :creatorId order by p.receivedOn asc, p.id asc",
+                        InvoicePayment.class)
+                .setParameter("creatorId", creatorId).getResultList();
+    }
 }
