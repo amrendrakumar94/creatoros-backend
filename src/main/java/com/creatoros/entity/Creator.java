@@ -100,6 +100,12 @@ public class Creator {
     @Column(length = 120)
     private String            city;
 
+    @Column(length = 60)
+    private String            state;
+
+    @Column(name = "state_code", length = 2)
+    private String            stateCode;
+
     @Column(length = 10)
     private String            pincode;
 

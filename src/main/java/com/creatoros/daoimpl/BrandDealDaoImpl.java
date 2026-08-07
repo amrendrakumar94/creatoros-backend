@@ -33,9 +33,4 @@ public class BrandDealDaoImpl extends HibernateDao implements BrandDealDao {
                 .setParameter("id", id).setParameter("creatorId", creatorId).uniqueResultOptional();
     }
 
-    @Override
-    public long countByCreatorId(Long creatorId) {
-        return session().createSelectionQuery("select count(d.id) from BrandDeal d where d.creator.id = :creatorId", Long.class)
-                .setParameter("creatorId", creatorId).getSingleResult();
-    }
 }

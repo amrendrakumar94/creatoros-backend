@@ -15,5 +15,4 @@ public interface BrandDealDao {
 
     Optional<BrandDeal> findByIdAndCreatorId(Long id, Long creatorId);
 
-    long countByCreatorId(Long creatorId);
 }

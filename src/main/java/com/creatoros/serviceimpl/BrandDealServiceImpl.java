@@ -22,6 +22,7 @@ import com.creatoros.enums.PaymentTerms;
 import com.creatoros.entity.UsageRights;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.BrandDealService;
+import com.creatoros.service.DocumentNumberService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +32,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BrandDealServiceImpl implements BrandDealService {
 
-    private final BrandDealDao        brandDealDao;
-    private final CreatorDao          creatorDao;
-    private final DomainMapper        domainMapper;
+    private final BrandDealDao          brandDealDao;
+    private final CreatorDao            creatorDao;
+    private final DomainMapper          domainMapper;
+    private final DocumentNumberService documentNumberService;
 
     @Override
     @Transactional(readOnly = true)
@@ -52,7 +54,8 @@ public class BrandDealServiceImpl implements BrandDealService {
     public BrandDealDto create(Long creatorId, BrandDealRequest request) {
         Creator creator = requireCreator(creatorId);
 
-        BrandDeal deal = BrandDeal.builder().creator(creator).dealNumber(nextDealNumber(creatorId)).stage(request.stage())
+        BrandDeal deal = BrandDeal.builder().creator(creator).dealNumber(documentNumberService.nextDealNumber(creatorId, LocalDate.now()))
+                .stage(request.stage())
                 .platform(request.platform()).amount(request.amount())
                 .paymentTerms(request.paymentTerms() == null ? PaymentTerms.NET_30 : request.paymentTerms()).build();
 
@@ -134,11 +137,6 @@ public class BrandDealServiceImpl implements BrandDealService {
         return UsageRights.builder().exclusivityDays(dto.exclusivityDays() == null ? 0 : dto.exclusivityDays())
                 .paidAdsAllowed(Boolean.TRUE.equals(dto.paidAdsAllowed())).whitelistingAllowed(Boolean.TRUE.equals(dto.whitelistingAllowed()))
                 .territory(blankToNull(dto.territory())).build();
-    }
-
-    private String nextDealNumber(Long creatorId) {
-        long next = brandDealDao.countByCreatorId(creatorId) + 1;
-        return "BD-%d-%02d".formatted(LocalDate.now().getYear(), next);
     }
 
     private BrandDeal requireDeal(Long creatorId, Long dealId) {

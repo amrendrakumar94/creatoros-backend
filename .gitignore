@@ -8,3 +8,6 @@ target/
 logs/
 
 .DS_Store
+
+# Confidential founder documents
+*.docx
