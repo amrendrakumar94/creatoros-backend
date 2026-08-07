@@ -1,0 +1,10 @@
+# Maven build output
+target/
+
+# IDE
+.idea
+
+# Rolling application logs (see logback.xml)
+logs/
+
+.DS_Store
