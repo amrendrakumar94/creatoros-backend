@@ -96,7 +96,7 @@ public class TeamServiceImpl implements TeamService {
         try {
             sendInvitationEmail(owner, invitation);
         } catch (IllegalStateException ex) {
-            log.warn("Failed to send team invitation email to {}: {}", invitation.getEmail(), ex.getMessage());
+            log.warn("Failed to send team invitation email to {}", invitation.getEmail(), ex);
         }
         return teamMapper.toInvitationDto(invitation);
     }
