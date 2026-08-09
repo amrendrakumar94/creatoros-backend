@@ -12,9 +12,11 @@ import com.creatoros.dto.expense.ExpenseDto;
 import com.creatoros.dto.expense.ExpenseRequest;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Expense;
+import com.creatoros.enums.PermissionKey;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.ExpenseService;
 import com.creatoros.service.GstCalculationService;
+import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,18 +34,21 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional(readOnly = true)
     public List<ExpenseDto> listForCreator(Long creatorId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES, PermissionKey.VIEW_DASHBOARD);
         return expenseDao.findByCreatorIdOrderByExpenseDateDescIdDesc(creatorId).stream().map(domainMapper::toExpenseDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public ExpenseDto get(Long creatorId, Long expenseId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES, PermissionKey.VIEW_DASHBOARD);
         return domainMapper.toExpenseDto(requireExpense(creatorId, expenseId));
     }
 
     @Override
     @Transactional
     public ExpenseDto create(Long creatorId, ExpenseRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES);
         Creator creator = creatorDao.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
 
         Expense expense = Expense.builder().creator(creator).build();
@@ -58,6 +63,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional
     public ExpenseDto update(Long creatorId, Long expenseId, ExpenseRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES);
         Expense expense = requireExpense(creatorId, expenseId);
         applyRequest(expense, request);
         return domainMapper.toExpenseDto(expenseDao.save(expense));
@@ -66,6 +72,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional
     public void delete(Long creatorId, Long expenseId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES);
         expenseDao.delete(requireExpense(creatorId, expenseId));
     }
 

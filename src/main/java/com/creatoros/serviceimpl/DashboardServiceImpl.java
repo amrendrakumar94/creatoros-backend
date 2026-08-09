@@ -12,10 +12,12 @@ import com.creatoros.dao.InvoiceDao;
 import com.creatoros.dao.InvoicePaymentDao;
 import com.creatoros.dto.dashboard.DashboardDto;
 import com.creatoros.entity.Creator;
+import com.creatoros.enums.PermissionKey;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.DashboardService;
 import com.creatoros.util.FinancialYear;
+import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 
@@ -33,6 +35,8 @@ public class DashboardServiceImpl implements DashboardService {
     @Override
     @Transactional(readOnly = true)
     public DashboardDto summary(Long creatorId, String financialYear) {
+        SecurityUtils.requireAny(PermissionKey.VIEW_DASHBOARD, PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_INVOICES,
+                PermissionKey.MANAGE_EXPENSES, PermissionKey.MANAGE_FINANCES);
         Creator creator = creatorDao.findById(creatorId).orElseThrow(() -> ResourceNotFoundException.of("Creator", creatorId));
 
         LocalDate today = LocalDate.now();

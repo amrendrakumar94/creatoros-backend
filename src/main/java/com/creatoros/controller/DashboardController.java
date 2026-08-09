@@ -21,6 +21,6 @@ public class DashboardController {
 
     @GetMapping
     public ResponseEntity<DashboardDto> summary(@RequestParam(required = false) String financialYear) {
-        return ResponseEntity.ok(dashboardService.summary(SecurityUtils.currentCreatorId(), financialYear));
+        return ResponseEntity.ok(dashboardService.summary(SecurityUtils.currentTenantId(), financialYear));
     }
 }

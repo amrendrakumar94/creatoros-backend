@@ -32,32 +32,32 @@ public class BrandDealController {
 
     @GetMapping
     public ResponseEntity<List<BrandDealDto>> list() {
-        return ResponseEntity.ok(brandDealService.listForCreator(SecurityUtils.currentCreatorId()));
+        return ResponseEntity.ok(brandDealService.listForCreator(SecurityUtils.currentTenantId()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<BrandDealDto> get(@PathVariable Long id) {
-        return ResponseEntity.ok(brandDealService.get(SecurityUtils.currentCreatorId(), id));
+        return ResponseEntity.ok(brandDealService.get(SecurityUtils.currentTenantId(), id));
     }
 
     @PostMapping
     public ResponseEntity<BrandDealDto> create(@Valid @RequestBody BrandDealRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(brandDealService.create(SecurityUtils.currentCreatorId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(brandDealService.create(SecurityUtils.currentTenantId(), request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<BrandDealDto> update(@PathVariable Long id, @Valid @RequestBody BrandDealRequest request) {
-        return ResponseEntity.ok(brandDealService.update(SecurityUtils.currentCreatorId(), id, request));
+        return ResponseEntity.ok(brandDealService.update(SecurityUtils.currentTenantId(), id, request));
     }
 
     @PatchMapping("/{id}/stage")
     public ResponseEntity<BrandDealDto> updateStage(@PathVariable Long id, @Valid @RequestBody UpdateDealStageRequest request) {
-        return ResponseEntity.ok(brandDealService.updateStage(SecurityUtils.currentCreatorId(), id, request.stage()));
+        return ResponseEntity.ok(brandDealService.updateStage(SecurityUtils.currentTenantId(), id, request.stage()));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        brandDealService.delete(SecurityUtils.currentCreatorId(), id);
+        brandDealService.delete(SecurityUtils.currentTenantId(), id);
         return ResponseEntity.noContent().build();
     }
 }

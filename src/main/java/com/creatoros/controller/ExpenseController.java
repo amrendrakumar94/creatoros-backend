@@ -30,27 +30,27 @@ public class ExpenseController {
 
     @GetMapping
     public ResponseEntity<List<ExpenseDto>> list() {
-        return ResponseEntity.ok(expenseService.listForCreator(SecurityUtils.currentCreatorId()));
+        return ResponseEntity.ok(expenseService.listForCreator(SecurityUtils.currentTenantId()));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ExpenseDto> get(@PathVariable Long id) {
-        return ResponseEntity.ok(expenseService.get(SecurityUtils.currentCreatorId(), id));
+        return ResponseEntity.ok(expenseService.get(SecurityUtils.currentTenantId(), id));
     }
 
     @PostMapping
     public ResponseEntity<ExpenseDto> create(@Valid @RequestBody ExpenseRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(expenseService.create(SecurityUtils.currentCreatorId(), request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(expenseService.create(SecurityUtils.currentTenantId(), request));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ExpenseDto> update(@PathVariable Long id, @Valid @RequestBody ExpenseRequest request) {
-        return ResponseEntity.ok(expenseService.update(SecurityUtils.currentCreatorId(), id, request));
+        return ResponseEntity.ok(expenseService.update(SecurityUtils.currentTenantId(), id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        expenseService.delete(SecurityUtils.currentCreatorId(), id);
+        expenseService.delete(SecurityUtils.currentTenantId(), id);
         return ResponseEntity.noContent().build();
     }
 }

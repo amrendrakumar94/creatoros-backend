@@ -26,6 +26,7 @@ import com.creatoros.entity.SupplierSnapshot;
 import com.creatoros.enums.InvoiceStatus;
 import com.creatoros.enums.PaymentTerms;
 import com.creatoros.enums.TdsSection;
+import com.creatoros.enums.PermissionKey;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.DocumentNumber;
@@ -34,6 +35,7 @@ import com.creatoros.service.GstBreakdown;
 import com.creatoros.service.GstCalculationService;
 import com.creatoros.service.InvoiceService;
 import com.creatoros.util.FinancialYear;
+import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,18 +59,21 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional(readOnly = true)
     public List<InvoiceDto> listForCreator(Long creatorId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS, PermissionKey.VIEW_DASHBOARD);
         return invoiceDao.findByCreatorIdOrderByIssueDateDescIdDesc(creatorId).stream().map(invoiceMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public InvoiceDto get(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS, PermissionKey.VIEW_DASHBOARD);
         return invoiceMapper.toDto(requireInvoice(creatorId, invoiceId));
     }
 
     @Override
     @Transactional
     public InvoiceDto create(Long creatorId, InvoiceRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
         Creator creator = requireCreator(creatorId);
         LocalDate issueDate = request.issueDate() == null ? LocalDate.now() : request.issueDate();
 
@@ -87,6 +92,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public InvoiceDto update(Long creatorId, Long invoiceId, InvoiceRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
         Invoice invoice = requireInvoice(creatorId, invoiceId);
         requireEditable(invoice);
 
@@ -109,6 +115,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public InvoiceDto updateStatus(Long creatorId, Long invoiceId, InvoiceStatus status) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
         Invoice invoice = requireInvoice(creatorId, invoiceId);
 
         if (status == InvoiceStatus.PARTIALLY_PAID || status == InvoiceStatus.PAID) {
@@ -131,6 +138,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public InvoiceDto recordPayment(Long creatorId, Long invoiceId, RecordPaymentRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_PAYMENTS, PermissionKey.MANAGE_INVOICES);
         Invoice invoice = requireInvoice(creatorId, invoiceId);
 
         if (invoice.getStatus() == InvoiceStatus.DRAFT) {
@@ -162,6 +170,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional
     public void delete(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
         Invoice invoice = requireInvoice(creatorId, invoiceId);
 
         if (invoice.getStatus() != InvoiceStatus.DRAFT) {

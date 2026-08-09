@@ -20,9 +20,11 @@ import com.creatoros.entity.DeliverableItem;
 import com.creatoros.enums.DeliverableStatus;
 import com.creatoros.enums.PaymentTerms;
 import com.creatoros.entity.UsageRights;
+import com.creatoros.enums.PermissionKey;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.service.BrandDealService;
 import com.creatoros.service.DocumentNumberService;
+import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,18 +42,21 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Override
     @Transactional(readOnly = true)
     public List<BrandDealDto> listForCreator(Long creatorId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_BRANDS, PermissionKey.MANAGE_CAMPAIGNS, PermissionKey.VIEW_DASHBOARD);
         return brandDealDao.findByCreatorIdOrderByCreatedAtDesc(creatorId).stream().map(domainMapper::toDealDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public BrandDealDto get(Long creatorId, Long dealId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_BRANDS, PermissionKey.MANAGE_CAMPAIGNS, PermissionKey.VIEW_DASHBOARD);
         return domainMapper.toDealDto(requireDeal(creatorId, dealId));
     }
 
     @Override
     @Transactional
     public BrandDealDto create(Long creatorId, BrandDealRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_BRANDS, PermissionKey.MANAGE_CAMPAIGNS);
         Creator creator = requireCreator(creatorId);
 
         BrandDeal deal = BrandDeal.builder().creator(creator).dealNumber(documentNumberService.nextDealNumber(creatorId, LocalDate.now()))
@@ -69,6 +74,7 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Override
     @Transactional
     public BrandDealDto update(Long creatorId, Long dealId, BrandDealRequest request) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_BRANDS, PermissionKey.MANAGE_CAMPAIGNS);
         BrandDeal deal = requireDeal(creatorId, dealId);
 
         deal.setStage(request.stage());
@@ -85,6 +91,7 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Override
     @Transactional
     public BrandDealDto updateStage(Long creatorId, Long dealId, DealStage stage) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_CAMPAIGNS);
         BrandDeal deal = requireDeal(creatorId, dealId);
         deal.setStage(stage);
         brandDealDao.save(deal);
@@ -94,6 +101,7 @@ public class BrandDealServiceImpl implements BrandDealService {
     @Override
     @Transactional
     public void delete(Long creatorId, Long dealId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_BRANDS);
         brandDealDao.delete(requireDeal(creatorId, dealId));
     }
 

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.creatoros.dao.CreatorDao;
+import com.creatoros.dao.TeamInvitationDao;
 import com.creatoros.dto.auth.AuthResponse;
 import com.creatoros.dto.auth.LoginRequest;
 import com.creatoros.dto.auth.SignupRequest;
@@ -20,6 +21,7 @@ import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.InvalidCredentialsException;
 import com.creatoros.security.JwtService;
 import com.creatoros.service.AuthService;
+import com.creatoros.service.TeamService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,10 +31,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    private final CreatorDao      creatorDao;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService      jwtService;
-    private final CreatorMapper   creatorMapper;
+    private final CreatorDao       creatorDao;
+    private final TeamInvitationDao teamInvitationDao;
+    private final PasswordEncoder   passwordEncoder;
+    private final JwtService       jwtService;
+    private final CreatorMapper    creatorMapper;
+    private final TeamService      teamService;
 
     @Override
     @Transactional
@@ -50,6 +54,9 @@ public class AuthServiceImpl implements AuthService {
                 .onboardingCompleted(false).build();
 
         creatorDao.save(creator);
+        teamInvitationDao.findFirstByEmailIgnoreCaseAndRevokedFalseAndAcceptedAtIsNull(email).ifPresent(invitation -> {
+            teamService.acceptInvitation(invitation.getInviteToken(), creator.getId());
+        });
         log.info("Registered creator {} ({})", creator.getId(), email);
 
         return buildAuthResponse(creator);
@@ -72,8 +79,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private AuthResponse buildAuthResponse(Creator creator) {
-        return new AuthResponse(jwtService.generateToken(creator), jwtService.expiryFromNow(), creator.isOnboardingCompleted(),
-                creatorMapper.toProfileDto(creator));
+        return creatorMapper.toAuthResponse(jwtService.generateToken(creator), jwtService.expiryFromNow(), creator);
     }
 
     private String normalizeEmail(String email) {

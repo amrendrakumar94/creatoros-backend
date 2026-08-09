@@ -37,8 +37,7 @@ public class CreatorProfileServiceImpl implements CreatorProfileService {
     @Transactional(readOnly = true)
     public CurrentUserResponse getCurrentUser(Long creatorId) {
         Creator creator = requireCreator(creatorId);
-        return new CurrentUserResponse(creator.getId(), creator.getEmail(), creator.getRole(), creator.isOnboardingCompleted(),
-                creatorMapper.toProfileDto(creator));
+        return creatorMapper.toCurrentUserResponse(creator);
     }
 
     @Override
