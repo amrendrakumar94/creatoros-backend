@@ -1,5 +1,6 @@
 package com.creatoros.serviceimpl;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,10 +10,13 @@ import com.creatoros.dto.deal.BrandDealDto;
 import com.creatoros.dto.deal.DeliverableItemDto;
 import com.creatoros.dto.deal.UsageRightsDto;
 import com.creatoros.dto.expense.ExpenseDto;
+import com.creatoros.dto.subscription.SubscriptionDto;
 import com.creatoros.entity.BrandDeal;
+import com.creatoros.entity.CreatorSubscription;
 import com.creatoros.entity.DeliverableItem;
 import com.creatoros.entity.Expense;
 import com.creatoros.entity.UsageRights;
+import com.creatoros.enums.SubscriptionPlan;
 
 @Component
 public class DomainMapper {
@@ -49,5 +53,19 @@ public class DomainMapper {
         return new ExpenseDto(idOf(expense.getId()), expense.getTitle(), expense.getCategory(), expense.getAmount(), expense.getExpenseDate(),
                 expense.getVendor(), expense.getGstin(), expense.isHasGstInvoice(), expense.getGstClaimableAmount(), expense.getReceiptUrl(),
                 expense.getPaymentMethod(), expense.getNotes(), expense.isTaxDeductible());
+    }
+
+    // ---------- Subscription ----------
+
+    public SubscriptionDto toSubscriptionDto(CreatorSubscription subscription) {
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        boolean trialActive = subscription.getPlan() == SubscriptionPlan.TRIAL && subscription.getTrialEndsAt() != null
+                && subscription.getTrialEndsAt().after(now);
+        boolean hasFullAccess = subscription.getPlan() == SubscriptionPlan.SUBSCRIPTION || trialActive;
+        boolean trialExpired = subscription.getPlan() == SubscriptionPlan.TRIAL && !trialActive;
+
+        return new SubscriptionDto(idOf(subscription.getId()), idOf(subscription.getCreatorId()), subscription.getPlan(),
+                subscription.getTrialEndsAt(), subscription.getSubscribedAt(), hasFullAccess, trialExpired, subscription.getCreatedAt(),
+                subscription.getUpdatedAt());
     }
 }

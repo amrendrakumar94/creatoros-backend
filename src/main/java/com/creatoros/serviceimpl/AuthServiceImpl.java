@@ -21,6 +21,7 @@ import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.InvalidCredentialsException;
 import com.creatoros.security.JwtService;
 import com.creatoros.service.AuthService;
+import com.creatoros.service.SubscriptionService;
 import com.creatoros.service.TeamService;
 
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService       jwtService;
     private final CreatorMapper    creatorMapper;
     private final TeamService      teamService;
+    private final SubscriptionService subscriptionService;
 
     @Override
     @Transactional
@@ -54,6 +56,7 @@ public class AuthServiceImpl implements AuthService {
                 .onboardingCompleted(false).build();
 
         creatorDao.save(creator);
+        subscriptionService.createDefaultSubscription(creator.getId());
         teamInvitationDao.findFirstByEmailIgnoreCaseAndRevokedFalseAndAcceptedAtIsNull(email).ifPresent(invitation -> {
             teamService.acceptInvitation(invitation.getInviteToken(), creator.getId());
         });
