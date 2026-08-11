@@ -1,5 +1,6 @@
 package com.creatoros.daoimpl;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,5 +33,11 @@ public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {
     public Optional<Invoice> findByIdAndCreatorId(Long id, Long creatorId) {
         return session().createSelectionQuery("from Invoice i where i.id = :id and i.creator.id = :creatorId", Invoice.class)
                 .setParameter("id", id).setParameter("creatorId", creatorId).uniqueResultOptional();
+    }
+
+    @Override
+    public List<Invoice> findDueScheduledSends(Timestamp now) {
+        return session().createSelectionQuery("from Invoice i where i.scheduledSendAt is not null and i.scheduledSendAt <= :now", Invoice.class)
+                .setParameter("now", now).getResultList();
     }
 }

@@ -2,9 +2,12 @@ package com.creatoros.serviceimpl;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +37,9 @@ import com.creatoros.service.DocumentNumberService;
 import com.creatoros.service.GstBreakdown;
 import com.creatoros.service.GstCalculationService;
 import com.creatoros.service.InvoiceService;
+import com.creatoros.util.EmailService;
 import com.creatoros.util.FinancialYear;
+import com.creatoros.util.InvoiceDocumentRenderer;
 import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -55,6 +60,8 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final DocumentNumberService   documentNumberService;
     private final GstCalculationService   gstCalculationService;
     private final InvoiceMapper           invoiceMapper;
+    private final EmailService            emailService;
+    private final InvoiceDocumentRenderer documentRenderer;
 
     @Override
     @Transactional(readOnly = true)
@@ -179,6 +186,115 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
 
         invoiceDao.delete(invoice);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceDto sendNow(Long creatorId, Long invoiceId, String toEmail) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+        requireSendable(invoice);
+
+        dispatchEmail(invoice, toEmail);
+        if (invoice.getStatus() == InvoiceStatus.DRAFT) {
+            invoice.setStatus(InvoiceStatus.SENT);
+        }
+        invoiceDao.save(invoice);
+
+        log.info("Sent invoice {} to {}", invoice.getInvoiceNumber(), toEmail);
+        return invoiceMapper.toDto(invoice);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceDto scheduleSend(Long creatorId, Long invoiceId, String toEmail, LocalDateTime sendAt) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+        requireSendable(invoice);
+
+        if (!sendAt.isAfter(LocalDateTime.now())) {
+            throw new BadRequestException("Choose a time in the future to schedule this send.", "SCHEDULE_TIME_IN_PAST");
+        }
+
+        invoice.setScheduledSendAt(Timestamp.valueOf(sendAt));
+        invoice.setScheduledSendEmail(toEmail);
+        invoiceDao.save(invoice);
+
+        log.info("Scheduled invoice {} to send to {} at {}", invoice.getInvoiceNumber(), toEmail, sendAt);
+        return invoiceMapper.toDto(invoice);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceDto cancelScheduledSend(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+
+        invoice.setScheduledSendAt(null);
+        invoice.setScheduledSendEmail(null);
+        invoiceDao.save(invoice);
+
+        return invoiceMapper.toDto(invoice);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public String getInvoiceHtml(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS, PermissionKey.VIEW_DASHBOARD);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+        return documentRenderer.buildHtml(invoiceMapper.toDto(invoice), invoice.getCreator());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public byte[] getInvoicePdf(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS, PermissionKey.VIEW_DASHBOARD);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+        String html = documentRenderer.buildHtml(invoiceMapper.toDto(invoice), invoice.getCreator());
+        return documentRenderer.renderPdf(html);
+    }
+
+    /**
+     * Dispatches every invoice whose scheduled send has come due. Runs as a
+     * system-wide batch job with no acting tenant, so - unlike every other
+     * finder in this class - it deliberately queries across all creators rather
+     * than being scoped to one.
+     */
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void dispatchDueScheduledSends() {
+        List<Invoice> due = invoiceDao.findDueScheduledSends(new Timestamp(System.currentTimeMillis()));
+        for (Invoice invoice : due) {
+            try {
+                dispatchEmail(invoice, invoice.getScheduledSendEmail());
+                if (invoice.getStatus() == InvoiceStatus.DRAFT) {
+                    invoice.setStatus(InvoiceStatus.SENT);
+                }
+                invoice.setScheduledSendAt(null);
+                invoice.setScheduledSendEmail(null);
+                invoiceDao.save(invoice);
+                log.info("Dispatched scheduled email for invoice {}", invoice.getInvoiceNumber());
+            } catch (Exception exception) {
+                log.warn("Failed to dispatch scheduled email for invoice {}", invoice.getInvoiceNumber(), exception);
+            }
+        }
+    }
+
+    private void requireSendable(Invoice invoice) {
+        if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
+            throw new BadRequestException("This invoice has been cancelled and can no longer be sent.", "INVOICE_CANCELLED");
+        }
+    }
+
+    private void dispatchEmail(Invoice invoice, String toEmail) {
+        InvoiceDto dto = invoiceMapper.toDto(invoice);
+        String html = documentRenderer.buildHtml(dto, invoice.getCreator());
+        String text = documentRenderer.buildPlainText(dto);
+        byte[] pdf = documentRenderer.renderPdf(html);
+
+        emailService.sendEmail(toEmail, "Invoice " + invoice.getInvoiceNumber(), text, html,
+                new EmailService.PdfAttachment(invoice.getInvoiceNumber() + ".pdf", pdf));
+        invoice.setLastEmailedAt(new Timestamp(System.currentTimeMillis()));
     }
 
     private void applyRequest(Invoice invoice, Creator creator, InvoiceRequest request, LocalDate issueDate) {
@@ -314,10 +430,6 @@ public class InvoiceServiceImpl implements InvoiceService {
     private void requireEditable(Invoice invoice) {
         if (invoice.getStatus() == InvoiceStatus.CANCELLED) {
             throw new BadRequestException("This invoice has been cancelled and can no longer be edited.", "INVOICE_CANCELLED");
-        }
-        if (invoice.getAmountPaid().signum() > 0) {
-            throw new BadRequestException("Payments have been recorded against this invoice, so its amounts can no longer change.",
-                    "INVOICE_HAS_PAYMENTS");
         }
     }
 

@@ -1,5 +1,6 @@
 package com.creatoros.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.creatoros.dto.invoice.InvoiceDto;
@@ -22,4 +23,14 @@ public interface InvoiceService {
     InvoiceDto recordPayment(Long creatorId, Long invoiceId, RecordPaymentRequest request);
 
     void delete(Long creatorId, Long invoiceId);
+
+    InvoiceDto sendNow(Long creatorId, Long invoiceId, String toEmail);
+
+    InvoiceDto scheduleSend(Long creatorId, Long invoiceId, String toEmail, LocalDateTime sendAt);
+
+    InvoiceDto cancelScheduledSend(Long creatorId, Long invoiceId);
+
+    String getInvoiceHtml(Long creatorId, Long invoiceId);
+
+    byte[] getInvoicePdf(Long creatorId, Long invoiceId);
 }

@@ -90,6 +90,17 @@
 			<optional>true</optional>
 		</dependency>
 
+		<!--
+			Renders the invoice HTML template to a PDF attachment for the send-by-email feature.
+			flying-saucer-pdf-openpdf was relocated into flying-saucer-pdf itself at 9.4.0 (its PDF
+			backend is now OpenPDF, not the old iText 2.1.7 line), so depend on it directly.
+		-->
+		<dependency>
+			<groupId>org.xhtmlrenderer</groupId>
+			<artifactId>flying-saucer-pdf</artifactId>
+			<version>9.4.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>

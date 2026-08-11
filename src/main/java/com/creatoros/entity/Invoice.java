@@ -173,6 +173,15 @@ public class Invoice {
     @Column(columnDefinition = "TEXT")
     private String                terms;
 
+    @Column(name = "scheduled_send_at")
+    private Timestamp             scheduledSendAt;
+
+    @Column(name = "scheduled_send_email", length = 255)
+    private String                scheduledSendEmail;
+
+    @Column(name = "last_emailed_at")
+    private Timestamp             lastEmailedAt;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC, id ASC")
     @BatchSize(size = 50)

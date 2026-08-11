@@ -2,7 +2,10 @@ package com.creatoros.controller;
 
 import java.util.List;
 
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.creatoros.dto.invoice.InvoiceDto;
 import com.creatoros.dto.invoice.InvoiceRequest;
 import com.creatoros.dto.invoice.RecordPaymentRequest;
+import com.creatoros.dto.invoice.ScheduleInvoiceSendRequest;
+import com.creatoros.dto.invoice.SendInvoiceRequest;
 import com.creatoros.dto.invoice.UpdateInvoiceStatusRequest;
 import com.creatoros.security.SecurityUtils;
 import com.creatoros.service.InvoiceService;
@@ -65,5 +70,33 @@ public class InvoiceController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         invoiceService.delete(SecurityUtils.currentTenantId(), id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/send")
+    public ResponseEntity<InvoiceDto> send(@PathVariable Long id, @Valid @RequestBody SendInvoiceRequest request) {
+        return ResponseEntity.ok(invoiceService.sendNow(SecurityUtils.currentTenantId(), id, request.toEmail()));
+    }
+
+    @PostMapping("/{id}/schedule-send")
+    public ResponseEntity<InvoiceDto> scheduleSend(@PathVariable Long id, @Valid @RequestBody ScheduleInvoiceSendRequest request) {
+        return ResponseEntity.ok(invoiceService.scheduleSend(SecurityUtils.currentTenantId(), id, request.toEmail(), request.sendAt()));
+    }
+
+    @PostMapping("/{id}/schedule-send/cancel")
+    public ResponseEntity<InvoiceDto> cancelScheduledSend(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.cancelScheduledSend(SecurityUtils.currentTenantId(), id));
+    }
+
+    @GetMapping(value = "/{id}/document", produces = MediaType.TEXT_HTML_VALUE)
+    public ResponseEntity<String> document(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.getInvoiceHtml(SecurityUtils.currentTenantId(), id));
+    }
+
+    @GetMapping(value = "/{id}/pdf", produces = "application/pdf")
+    public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
+        byte[] pdf = invoiceService.getInvoicePdf(SecurityUtils.currentTenantId(), id);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("invoice-" + id + ".pdf").build().toString())
+                .body(pdf);
     }
 }

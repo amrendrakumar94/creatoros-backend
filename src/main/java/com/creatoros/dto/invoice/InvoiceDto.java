@@ -1,6 +1,7 @@
 package com.creatoros.dto.invoice;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -88,5 +89,11 @@ public record InvoiceDto(
 
         List<InvoiceLineItemDto> lineItems,
 
-        List<InvoicePaymentDto> payments) {
+        List<InvoicePaymentDto> payments,
+
+        Timestamp scheduledSendAt,
+
+        String scheduledSendEmail,
+
+        Timestamp lastEmailedAt) {
 }

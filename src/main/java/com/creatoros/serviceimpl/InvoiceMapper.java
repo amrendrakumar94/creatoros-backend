@@ -42,7 +42,8 @@ public class InvoiceMapper {
                 invoice.getSgstRate(), invoice.getSgstAmount(), invoice.getIgstRate(), invoice.getIgstAmount(), invoice.getTotalTax(),
                 invoice.getInvoiceTotal(), invoice.getTdsSection(), invoice.getTdsRate(), invoice.getTdsAmount(), invoice.getNetReceivable(),
                 invoice.getAmountPaid(), withheld, invoice.getBalanceDue(), invoice.getNotes(), invoice.getTerms(),
-                invoice.getLineItems().stream().map(this::toLineItemDto).toList(), payments.stream().map(this::toPaymentDto).toList());
+                invoice.getLineItems().stream().map(this::toLineItemDto).toList(), payments.stream().map(this::toPaymentDto).toList(),
+                invoice.getScheduledSendAt(), invoice.getScheduledSendEmail(), invoice.getLastEmailedAt());
     }
 
     private InvoiceLineItemDto toLineItemDto(InvoiceLineItem item) {
