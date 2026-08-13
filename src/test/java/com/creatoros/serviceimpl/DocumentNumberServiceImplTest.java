@@ -82,6 +82,18 @@ class DocumentNumberServiceImplTest {
     }
 
     @Test
+    @DisplayName("issues a quotation number in the same slash/financial-year format as invoices")
+    void quotationNumberFollowsInvoiceStyleFormat() {
+        when(documentCounterDao.nextSequence(CREATOR, DocumentType.QUOTATION, "2026-27")).thenReturn(7);
+
+        DocumentNumber number = service.nextQuotationNumber(CREATOR, LocalDate.parse("2026-08-08"));
+
+        assertThat(number.value()).isEqualTo("QUO/2026-27/007");
+        assertThat(number.sequence()).isEqualTo(7);
+        assertThat(number.financialYear()).isEqualTo("2026-27");
+    }
+
+    @Test
     @DisplayName("keeps deal and invoice series independent of each other")
     void dealAndInvoiceSeriesAreIndependent() {
         when(documentCounterDao.nextSequence(CREATOR, DocumentType.BRAND_DEAL, "2026-27")).thenReturn(1);

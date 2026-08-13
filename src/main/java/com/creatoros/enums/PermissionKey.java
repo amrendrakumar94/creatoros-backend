@@ -14,6 +14,7 @@ public enum PermissionKey {
     MANAGE_DELIVERABLES("Manage Deliverables"),
     MANAGE_FINANCES("Manage Finances"),
     MANAGE_INVOICES("Manage Invoices"),
+    MANAGE_QUOTATIONS("Manage Quotations"),
     MANAGE_PAYMENTS("Manage Payments"),
     MANAGE_EXPENSES("Manage Expenses"),
     VIEW_DASHBOARD("View Dashboard");

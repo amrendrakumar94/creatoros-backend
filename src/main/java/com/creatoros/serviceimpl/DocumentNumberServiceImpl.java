@@ -30,4 +30,11 @@ public class DocumentNumberServiceImpl implements DocumentNumberService {
         int sequence = documentCounterDao.nextSequence(creatorId, DocumentType.INVOICE, financialYear);
         return new DocumentNumber("INV/%s/%03d".formatted(financialYear, sequence), sequence, financialYear);
     }
+
+    @Override
+    public DocumentNumber nextQuotationNumber(Long creatorId, LocalDate on) {
+        String financialYear = FinancialYear.labelOf(on);
+        int sequence = documentCounterDao.nextSequence(creatorId, DocumentType.QUOTATION, financialYear);
+        return new DocumentNumber("QUO/%s/%03d".formatted(financialYear, sequence), sequence, financialYear);
+    }
 }

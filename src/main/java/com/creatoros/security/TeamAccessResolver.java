@@ -44,11 +44,11 @@ public class TeamAccessResolver {
     public static Set<PermissionKey> defaultPermissionsForTeamRole(Role role) {
         return switch (role) {
             case MANAGER -> EnumSet.of(PermissionKey.MANAGE_BRANDS, PermissionKey.MANAGE_DEALS, PermissionKey.MANAGE_CAMPAIGNS,
-                    PermissionKey.VIEW_DASHBOARD);
+                    PermissionKey.MANAGE_QUOTATIONS, PermissionKey.VIEW_DASHBOARD);
             case EDITOR -> EnumSet.of(PermissionKey.MANAGE_CONTENT, PermissionKey.MANAGE_CAMPAIGNS, PermissionKey.MANAGE_DELIVERABLES,
                     PermissionKey.VIEW_DASHBOARD);
-            case ACCOUNTANT -> EnumSet.of(PermissionKey.MANAGE_FINANCES, PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS,
-                    PermissionKey.MANAGE_EXPENSES, PermissionKey.VIEW_DASHBOARD);
+            case ACCOUNTANT -> EnumSet.of(PermissionKey.MANAGE_FINANCES, PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_QUOTATIONS,
+                    PermissionKey.MANAGE_PAYMENTS, PermissionKey.MANAGE_EXPENSES, PermissionKey.VIEW_DASHBOARD);
             case CREATOR, ADMIN -> throw new IllegalStateException("Role " + role + " has no default team permission set");
         };
     }
