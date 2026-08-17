@@ -385,7 +385,7 @@ class QuotationServiceImplTest {
                 LocalDate.now().plusDays(30), PaymentTerms.NET_30, null, null, null, null, false, false, false, BigDecimal.ZERO, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO, TdsSection.NONE, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
-                BigDecimal.ZERO, BigDecimal.ZERO, null, null, List.of(), List.of(), null, null, null);
+                BigDecimal.ZERO, BigDecimal.ZERO, null, null, List.of(), List.of(), null, null, null, null);
     }
 
     private void authenticateAsOwner(Long creatorId) {

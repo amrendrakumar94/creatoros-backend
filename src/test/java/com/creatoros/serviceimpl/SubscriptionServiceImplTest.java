@@ -9,6 +9,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.Optional;
 import java.util.Set;
@@ -22,8 +23,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.creatoros.dao.CreatorSubscriptionDao;
+import com.creatoros.dto.subscription.SubscriptionDto;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.CreatorSubscription;
 import com.creatoros.enums.CreatorStatus;
@@ -32,6 +35,7 @@ import com.creatoros.enums.SubscriptionPlan;
 import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.security.CreatorPrincipal;
+import com.creatoros.util.RazorpayService;
 
 @ExtendWith(MockitoExtension.class)
 class SubscriptionServiceImplTest {
@@ -42,6 +46,9 @@ class SubscriptionServiceImplTest {
     @Mock
     private CreatorSubscriptionDao subscriptionDao;
 
+    @Mock
+    private RazorpayService razorpayService;
+
     // Real, not mocked - the trial-expiry derivation lives here, and these tests exercise it.
     private final DomainMapper domainMapper = new DomainMapper();
 
@@ -49,7 +56,8 @@ class SubscriptionServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new SubscriptionServiceImpl(subscriptionDao, domainMapper);
+        service = new SubscriptionServiceImpl(subscriptionDao, domainMapper, razorpayService);
+        ReflectionTestUtils.setField(service, "subscriptionAmountInr", new BigDecimal("999"));
     }
 
     @AfterEach
@@ -76,27 +84,78 @@ class SubscriptionServiceImplTest {
     }
 
     @Test
-    @DisplayName("allows the workspace owner to subscribe")
-    void ownerCanSubscribe() {
+    @DisplayName("owner starting a subscription gets a Razorpay checkout link, not instant activation")
+    void ownerSubscribeCreatesCheckoutLinkWithoutActivating() {
         authenticateAsOwner(OWNER_A);
         CreatorSubscription subscription = trialSubscription(OWNER_A, futureTimestamp());
         when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(subscription));
+        when(razorpayService.createPaymentLink(new BigDecimal("999"), "CreatorOS subscription", "subscription:" + OWNER_A, null, null,
+                "/settings")).thenReturn(new RazorpayService.PaymentLink("plink_test", "https://rzp.io/test"));
 
-        service.subscribe(OWNER_A);
+        SubscriptionDto dto = service.subscribe(OWNER_A);
 
-        assertThat(subscription.getPlan()).isEqualTo(SubscriptionPlan.SUBSCRIPTION);
-        assertThat(subscription.getSubscribedAt()).isNotNull();
+        assertThat(subscription.getPlan()).isEqualTo(SubscriptionPlan.TRIAL);
+        assertThat(subscription.getSubscribedAt()).isNull();
+        assertThat(subscription.getRazorpayPaymentLinkId()).isEqualTo("plink_test");
+        assertThat(dto.checkoutUrl()).isEqualTo("https://rzp.io/test");
         verify(subscriptionDao, times(1)).save(subscription);
     }
 
     @Test
-    @DisplayName("repeated subscribe is idempotent - no save when already subscribed")
+    @DisplayName("repeated subscribe is idempotent - no checkout or save when already subscribed")
     void repeatedSubscribeIsNoOp() {
         authenticateAsOwner(OWNER_A);
         CreatorSubscription subscription = subscribedSubscription(OWNER_A);
         when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(subscription));
 
         service.subscribe(OWNER_A);
+
+        verify(subscriptionDao, never()).save(any());
+        verify(razorpayService, never()).createPaymentLink(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("repeated subscribe reuses an outstanding Razorpay checkout link")
+    void repeatedSubscribeReusesPendingCheckoutLink() {
+        authenticateAsOwner(OWNER_A);
+        CreatorSubscription subscription = trialSubscription(OWNER_A, futureTimestamp());
+        subscription.setRazorpayPaymentLinkId("plink_test");
+        subscription.setRazorpayPaymentLinkUrl("https://rzp.io/test");
+        when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(subscription));
+
+        SubscriptionDto dto = service.subscribe(OWNER_A);
+
+        assertThat(dto.checkoutUrl()).isEqualTo("https://rzp.io/test");
+        verify(subscriptionDao, never()).save(any());
+        verify(razorpayService, never()).createPaymentLink(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("activateFromGatewayPayment flips the plan and clears the pending checkout")
+    void activateFromGatewayPaymentActivatesSubscription() {
+        CreatorSubscription subscription = trialSubscription(OWNER_A, futureTimestamp());
+        subscription.setRazorpayPaymentLinkId("plink_test");
+        subscription.setRazorpayPaymentLinkUrl("https://rzp.io/test");
+        when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(subscription));
+
+        service.activateFromGatewayPayment(OWNER_A, "pay_123");
+
+        assertThat(subscription.getPlan()).isEqualTo(SubscriptionPlan.SUBSCRIPTION);
+        assertThat(subscription.getSubscribedAt()).isNotNull();
+        assertThat(subscription.getRazorpayPaymentId()).isEqualTo("pay_123");
+        assertThat(subscription.getRazorpayPaymentLinkId()).isNull();
+        assertThat(subscription.getRazorpayPaymentLinkUrl()).isNull();
+        verify(subscriptionDao, times(1)).save(subscription);
+    }
+
+    @Test
+    @DisplayName("activateFromGatewayPayment ignores a re-delivered webhook for the same payment")
+    void activateFromGatewayPaymentIsIdempotent() {
+        CreatorSubscription subscription = subscribedSubscription(OWNER_A);
+        subscription.setRazorpayPaymentId("pay_123");
+        when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(subscription));
+
+        service.activateFromGatewayPayment(OWNER_A, "pay_123");
 
         verify(subscriptionDao, never()).save(any());
     }
@@ -131,6 +190,8 @@ class SubscriptionServiceImplTest {
     void platformAdminAllowedEvenWhenNotOwner() {
         authenticateAs(MEMBER, OWNER_A, Role.ADMIN);
         when(subscriptionDao.findByCreatorId(OWNER_A)).thenReturn(Optional.of(trialSubscription(OWNER_A, futureTimestamp())));
+        when(razorpayService.createPaymentLink(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new RazorpayService.PaymentLink("plink_test", "https://rzp.io/test"));
 
         assertThatCode(() -> service.subscribe(OWNER_A)).doesNotThrowAnyException();
     }

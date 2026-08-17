@@ -60,6 +60,13 @@ public class GlobalExceptionHandler {
                 ApiError.of(HttpStatus.FORBIDDEN, "You do not have permission to perform this action", "ACCESS_DENIED", request.getRequestURI()));
     }
 
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ApiError> handlePaymentGateway(PaymentGatewayException ex, HttpServletRequest request) {
+        log.error("Razorpay call failed on {} {}", request.getMethod(), request.getRequestURI(), ex);
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                .body(ApiError.of(HttpStatus.BAD_GATEWAY, ex.getMessage(), ex.getErrorCode(), request.getRequestURI()));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleUnexpected(Exception ex, HttpServletRequest request) {
         log.error("Unhandled exception on {} {}", request.getMethod(), request.getRequestURI(), ex);

@@ -66,6 +66,6 @@ public class DomainMapper {
 
         return new SubscriptionDto(idOf(subscription.getId()), idOf(subscription.getCreatorId()), subscription.getPlan(),
                 subscription.getTrialEndsAt(), subscription.getSubscribedAt(), hasFullAccess, trialExpired, subscription.getCreatedAt(),
-                subscription.getUpdatedAt());
+                subscription.getUpdatedAt(), subscription.getRazorpayPaymentLinkUrl());
     }
 }

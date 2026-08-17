@@ -1,7 +1,9 @@
 package com.creatoros.serviceimpl;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import com.creatoros.exception.BadRequestException;
 import com.creatoros.exception.ResourceNotFoundException;
 import com.creatoros.security.SecurityUtils;
 import com.creatoros.service.SubscriptionService;
+import com.creatoros.util.RazorpayService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,10 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 
     private final CreatorSubscriptionDao subscriptionDao;
     private final DomainMapper           domainMapper;
+    private final RazorpayService        razorpayService;
+
+    @Value("${app.razorpay.subscription-amount-inr}")
+    private BigDecimal subscriptionAmountInr;
 
     @Override
     @Transactional(readOnly = true)
@@ -34,18 +41,52 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         return domainMapper.toSubscriptionDto(requireSubscription(creatorId));
     }
 
+    /**
+     * Starts a Razorpay checkout for the subscription price. The plan itself only flips to
+     * {@code SUBSCRIPTION} once the webhook confirms payment (see
+     * {@link #activateFromGatewayPayment}) - never on the strength of this call returning.
+     */
     @Override
     @Transactional
     public SubscriptionDto subscribe(Long creatorId) {
         requireOwnerOrAdmin();
         CreatorSubscription subscription = requireSubscription(creatorId);
-        if (subscription.getPlan() != SubscriptionPlan.SUBSCRIPTION) {
-            subscription.setPlan(SubscriptionPlan.SUBSCRIPTION);
-            subscription.setSubscribedAt(new Timestamp(System.currentTimeMillis()));
-            subscriptionDao.save(subscription);
-            log.info("Creator {} subscribed", creatorId);
+        if (subscription.getPlan() == SubscriptionPlan.SUBSCRIPTION) {
+            return domainMapper.toSubscriptionDto(subscription);
         }
+        // Razorpay reference IDs are globally unique. Reuse an outstanding checkout when a
+        // user retries instead of attempting to create a second link for this subscription.
+        if (subscription.getRazorpayPaymentLinkUrl() != null) {
+            return domainMapper.toSubscriptionDto(subscription);
+        }
+
+        RazorpayService.PaymentLink link = razorpayService.createPaymentLink(subscriptionAmountInr, "CreatorOS subscription",
+                "subscription:" + creatorId, null, null, "/settings");
+        subscription.setRazorpayPaymentLinkId(link.id());
+        subscription.setRazorpayPaymentLinkUrl(link.url());
+        subscriptionDao.save(subscription);
+
+        log.info("Creator {} started a subscription checkout", creatorId);
         return domainMapper.toSubscriptionDto(subscription);
+    }
+
+    @Override
+    @Transactional
+    public void activateFromGatewayPayment(Long creatorId, String razorpayPaymentId) {
+        CreatorSubscription subscription = requireSubscription(creatorId);
+        if (razorpayPaymentId.equals(subscription.getRazorpayPaymentId())) {
+            log.info("Ignoring already-processed Razorpay payment {} for creator {}", razorpayPaymentId, creatorId);
+            return;
+        }
+
+        subscription.setPlan(SubscriptionPlan.SUBSCRIPTION);
+        subscription.setSubscribedAt(new Timestamp(System.currentTimeMillis()));
+        subscription.setRazorpayPaymentId(razorpayPaymentId);
+        subscription.setRazorpayPaymentLinkId(null);
+        subscription.setRazorpayPaymentLinkUrl(null);
+        subscriptionDao.save(subscription);
+
+        log.info("Activated subscription for creator {} via Razorpay payment {}", creatorId, razorpayPaymentId);
     }
 
     @Override

@@ -13,6 +13,7 @@ public enum SettlementMethod {
     UPI("UPI"),
     CHEQUE("Cheque"),
     CASH("Cash"),
+    RAZORPAY("Razorpay"),
     OTHER("Other");
 
     private final String label;

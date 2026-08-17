@@ -1,6 +1,7 @@
 package com.creatoros.daoimpl;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Repository;
 
@@ -29,5 +30,11 @@ public class InvoicePaymentDaoImpl extends HibernateDao implements InvoicePaymen
                 .createSelectionQuery("from InvoicePayment p where p.creator.id = :creatorId order by p.receivedOn asc, p.id asc",
                         InvoicePayment.class)
                 .setParameter("creatorId", creatorId).getResultList();
+    }
+
+    @Override
+    public Optional<InvoicePayment> findByRazorpayPaymentId(String razorpayPaymentId) {
+        return session().createSelectionQuery("from InvoicePayment p where p.razorpayPaymentId = :razorpayPaymentId", InvoicePayment.class)
+                .setParameter("razorpayPaymentId", razorpayPaymentId).uniqueResultOptional();
     }
 }

@@ -85,6 +85,6 @@ class InvoiceDocumentRendererTest {
                 BigDecimal.ZERO, new BigDecimal("10000.00"), BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO,
                 BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("10000.00"), TdsSection.NONE, BigDecimal.ZERO, BigDecimal.ZERO,
                 new BigDecimal("10000.00"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("10000.00"), null, null, List.of(lineItem),
-                List.of(), null, null, null);
+                List.of(), null, null, null, null);
     }
 }

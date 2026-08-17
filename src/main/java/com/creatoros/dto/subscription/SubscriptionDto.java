@@ -22,5 +22,8 @@ public record SubscriptionDto(
 
         Timestamp createdAt,
 
-        Timestamp updatedAt) {
+        Timestamp updatedAt,
+
+        /** A pending Razorpay checkout link - null once payment is confirmed and the plan is active. */
+        String checkoutUrl) {
 }

@@ -40,4 +40,9 @@ public class InvoiceDaoImpl extends HibernateDao implements InvoiceDao {
         return session().createSelectionQuery("from Invoice i where i.scheduledSendAt is not null and i.scheduledSendAt <= :now", Invoice.class)
                 .setParameter("now", now).getResultList();
     }
+
+    @Override
+    public Optional<Invoice> findById(Long id) {
+        return session().createSelectionQuery("from Invoice i where i.id = :id", Invoice.class).setParameter("id", id).uniqueResultOptional();
+    }
 }

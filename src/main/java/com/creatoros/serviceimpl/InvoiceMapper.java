@@ -43,7 +43,7 @@ public class InvoiceMapper {
                 invoice.getInvoiceTotal(), invoice.getTdsSection(), invoice.getTdsRate(), invoice.getTdsAmount(), invoice.getNetReceivable(),
                 invoice.getAmountPaid(), withheld, invoice.getBalanceDue(), invoice.getNotes(), invoice.getTerms(),
                 invoice.getLineItems().stream().map(this::toLineItemDto).toList(), payments.stream().map(this::toPaymentDto).toList(),
-                invoice.getScheduledSendAt(), invoice.getScheduledSendEmail(), invoice.getLastEmailedAt());
+                invoice.getScheduledSendAt(), invoice.getScheduledSendEmail(), invoice.getLastEmailedAt(), invoice.getRazorpayPaymentLinkUrl());
     }
 
     private InvoiceLineItemDto toLineItemDto(InvoiceLineItem item) {

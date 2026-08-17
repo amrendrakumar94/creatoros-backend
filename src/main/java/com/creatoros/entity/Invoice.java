@@ -182,6 +182,13 @@ public class Invoice {
     @Column(name = "last_emailed_at")
     private Timestamp             lastEmailedAt;
 
+    /** A payment link the brand can pay online - reused on repeat requests rather than reissued. */
+    @Column(name = "razorpay_payment_link_id", length = 64)
+    private String                razorpayPaymentLinkId;
+
+    @Column(name = "razorpay_payment_link_url", length = 255)
+    private String                razorpayPaymentLinkUrl;
+
     @OneToMany(mappedBy = "invoice", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC, id ASC")
     @BatchSize(size = 50)

@@ -28,6 +28,7 @@ import com.creatoros.entity.InvoicePayment;
 import com.creatoros.entity.SupplierSnapshot;
 import com.creatoros.enums.InvoiceStatus;
 import com.creatoros.enums.PaymentTerms;
+import com.creatoros.enums.SettlementMethod;
 import com.creatoros.enums.TdsSection;
 import com.creatoros.enums.PermissionKey;
 import com.creatoros.exception.BadRequestException;
@@ -40,6 +41,7 @@ import com.creatoros.service.InvoiceService;
 import com.creatoros.util.EmailService;
 import com.creatoros.util.FinancialYear;
 import com.creatoros.util.InvoiceDocumentRenderer;
+import com.creatoros.util.RazorpayService;
 import com.creatoros.security.SecurityUtils;
 
 import lombok.RequiredArgsConstructor;
@@ -62,6 +64,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     private final InvoiceMapper           invoiceMapper;
     private final EmailService            emailService;
     private final InvoiceDocumentRenderer documentRenderer;
+    private final RazorpayService         razorpayService;
 
     @Override
     @Transactional(readOnly = true)
@@ -252,6 +255,53 @@ public class InvoiceServiceImpl implements InvoiceService {
         Invoice invoice = requireInvoice(creatorId, invoiceId);
         String html = documentRenderer.buildHtml(invoiceMapper.toDto(invoice), invoice.getCreator());
         return documentRenderer.renderPdf(html);
+    }
+
+    @Override
+    @Transactional
+    public InvoiceDto createPaymentLink(Long creatorId, Long invoiceId) {
+        SecurityUtils.requireAny(PermissionKey.MANAGE_INVOICES, PermissionKey.MANAGE_PAYMENTS);
+        Invoice invoice = requireInvoice(creatorId, invoiceId);
+
+        if (!invoice.getStatus().isSettleable()) {
+            throw new BadRequestException(
+                    "Only a sent, unpaid invoice can take an online payment. This one is %s.".formatted(invoice.getStatus().getLabel().toLowerCase()),
+                    "INVOICE_NOT_PAYABLE");
+        }
+        if (invoice.getBalanceDue().signum() <= 0) {
+            throw new BadRequestException("Nothing is outstanding on this invoice.", "INVOICE_NOT_PAYABLE");
+        }
+
+        RazorpayService.PaymentLink link = razorpayService.createPaymentLink(invoice.getBalanceDue(),
+                "Payment for invoice " + invoice.getInvoiceNumber(), "invoice:" + invoice.getId(),
+                invoice.getBuyer() == null ? null : invoice.getBuyer().getName(), invoice.getBuyer() == null ? null : invoice.getBuyer().getEmail(),
+                null);
+        invoice.setRazorpayPaymentLinkId(link.id());
+        invoice.setRazorpayPaymentLinkUrl(link.url());
+        invoiceDao.save(invoice);
+
+        log.info("Created Razorpay payment link for invoice {}", invoice.getInvoiceNumber());
+        return invoiceMapper.toDto(invoice);
+    }
+
+    @Override
+    @Transactional
+    public void recordGatewayPayment(Long invoiceId, BigDecimal amount, String razorpayPaymentId) {
+        if (invoicePaymentDao.findByRazorpayPaymentId(razorpayPaymentId).isPresent()) {
+            log.info("Ignoring already-recorded Razorpay payment {}", razorpayPaymentId);
+            return;
+        }
+
+        Invoice invoice = invoiceDao.findById(invoiceId).orElseThrow(() -> ResourceNotFoundException.of("Invoice", invoiceId));
+
+        InvoicePayment payment = InvoicePayment.builder().creator(invoice.getCreator()).invoice(invoice).amount(amount).receivedOn(LocalDate.now())
+                .method(SettlementMethod.RAZORPAY).razorpayPaymentId(razorpayPaymentId).build();
+
+        invoicePaymentDao.save(payment);
+        applySettlement(invoice);
+        invoiceDao.save(invoice);
+
+        log.info("Recorded Razorpay payment {} ({}) against invoice {}", razorpayPaymentId, amount, invoice.getInvoiceNumber());
     }
 
     /**

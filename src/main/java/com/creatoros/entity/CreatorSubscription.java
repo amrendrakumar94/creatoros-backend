@@ -48,6 +48,17 @@ public class CreatorSubscription {
     @Column(name = "subscribed_at")
     private Timestamp        subscribedAt;
 
+    /** A pending checkout - cleared once the webhook confirms payment and activates the plan. */
+    @Column(name = "razorpay_payment_link_id", length = 64)
+    private String           razorpayPaymentLinkId;
+
+    @Column(name = "razorpay_payment_link_url", length = 255)
+    private String           razorpayPaymentLinkUrl;
+
+    /** The payment that activated the current subscription - guards a re-delivered webhook from re-activating. */
+    @Column(name = "razorpay_payment_id", length = 64)
+    private String           razorpayPaymentId;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private Timestamp        createdAt;

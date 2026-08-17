@@ -95,5 +95,7 @@ public record InvoiceDto(
 
         String scheduledSendEmail,
 
-        Timestamp lastEmailedAt) {
+        Timestamp lastEmailedAt,
+
+        String paymentLinkUrl) {
 }

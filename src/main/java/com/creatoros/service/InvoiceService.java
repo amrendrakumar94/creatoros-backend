@@ -1,5 +1,6 @@
 package com.creatoros.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -33,4 +34,15 @@ public interface InvoiceService {
     String getInvoiceHtml(Long creatorId, Long invoiceId);
 
     byte[] getInvoicePdf(Long creatorId, Long invoiceId);
+
+    /** Creates (or refreshes) a Razorpay payment link for the invoice's current balance due. */
+    InvoiceDto createPaymentLink(Long creatorId, Long invoiceId);
+
+    /**
+     * Records a Razorpay-confirmed payment. Deliberately not scoped to a creator - the webhook
+     * that calls this has no acting tenant, only an invoice id; its own signature check is what
+     * stands in for authentication here, the same way {@code findDueScheduledSends} is unscoped
+     * because the scheduler has no acting tenant either.
+     */
+    void recordGatewayPayment(Long invoiceId, BigDecimal amount, String razorpayPaymentId);
 }

@@ -60,6 +60,10 @@ public class InvoicePayment {
     @Column(length = 120)
     private String           reference;
 
+    /** Set only when {@code method == RAZORPAY}; unique so a re-delivered webhook can't double-record. */
+    @Column(name = "razorpay_payment_id", length = 64)
+    private String           razorpayPaymentId;
+
     @Column(name = "tds_withheld", nullable = false, precision = 15, scale = 2)
     @Builder.Default
     private BigDecimal       tdsWithheld = BigDecimal.ZERO;

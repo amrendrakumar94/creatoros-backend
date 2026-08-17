@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -34,8 +35,10 @@ import com.creatoros.dao.BrandDealDao;
 import com.creatoros.dao.CreatorDao;
 import com.creatoros.dao.InvoiceDao;
 import com.creatoros.dao.InvoicePaymentDao;
+import com.creatoros.entity.BuyerSnapshot;
 import com.creatoros.entity.Creator;
 import com.creatoros.entity.Invoice;
+import com.creatoros.entity.InvoicePayment;
 import com.creatoros.enums.CreatorStatus;
 import com.creatoros.enums.InvoiceStatus;
 import com.creatoros.enums.PermissionKey;
@@ -46,6 +49,7 @@ import com.creatoros.service.DocumentNumberService;
 import com.creatoros.service.GstCalculationService;
 import com.creatoros.util.EmailService;
 import com.creatoros.util.InvoiceDocumentRenderer;
+import com.creatoros.util.RazorpayService;
 
 @ExtendWith(MockitoExtension.class)
 class InvoiceServiceImplTest {
@@ -80,12 +84,15 @@ class InvoiceServiceImplTest {
     @Mock
     private InvoiceDocumentRenderer documentRenderer;
 
+    @Mock
+    private RazorpayService razorpayService;
+
     private InvoiceServiceImpl service;
 
     @BeforeEach
     void setUp() {
         service = new InvoiceServiceImpl(invoiceDao, invoicePaymentDao, creatorDao, brandDealDao, documentNumberService, gstCalculationService,
-                invoiceMapper, emailService, documentRenderer);
+                invoiceMapper, emailService, documentRenderer, razorpayService);
         authenticateAsOwner(OWNER);
     }
 
@@ -190,6 +197,75 @@ class InvoiceServiceImplTest {
     }
 
     @Test
+    @DisplayName("createPaymentLink rejects a draft invoice")
+    void createPaymentLinkRejectsADraftInvoice() {
+        Invoice invoice = invoice(InvoiceStatus.DRAFT);
+        when(invoiceDao.findByIdAndCreatorId(INVOICE_ID, OWNER)).thenReturn(Optional.of(invoice));
+
+        assertThatThrownBy(() -> service.createPaymentLink(OWNER, INVOICE_ID)).isInstanceOf(BadRequestException.class)
+                .satisfies(ex -> assertThat(((BadRequestException) ex).getErrorCode()).isEqualTo("INVOICE_NOT_PAYABLE"));
+        verifyNoInteractions(razorpayService);
+    }
+
+    @Test
+    @DisplayName("createPaymentLink rejects an invoice with nothing outstanding")
+    void createPaymentLinkRejectsWhenNothingOutstanding() {
+        Invoice invoice = payableInvoice(BigDecimal.ZERO);
+        when(invoiceDao.findByIdAndCreatorId(INVOICE_ID, OWNER)).thenReturn(Optional.of(invoice));
+
+        assertThatThrownBy(() -> service.createPaymentLink(OWNER, INVOICE_ID)).isInstanceOf(BadRequestException.class)
+                .satisfies(ex -> assertThat(((BadRequestException) ex).getErrorCode()).isEqualTo("INVOICE_NOT_PAYABLE"));
+        verifyNoInteractions(razorpayService);
+    }
+
+    @Test
+    @DisplayName("createPaymentLink creates a link for the balance due and stores it on the invoice")
+    void createPaymentLinkCreatesAndStoresALink() {
+        Invoice invoice = payableInvoice(new BigDecimal("500.00"));
+        when(invoiceDao.findByIdAndCreatorId(INVOICE_ID, OWNER)).thenReturn(Optional.of(invoice));
+        when(razorpayService.createPaymentLink(eq(new BigDecimal("500.00")), any(), eq("invoice:" + INVOICE_ID), eq("Acme Brand"),
+                eq("brand@example.com"), isNull())).thenReturn(new RazorpayService.PaymentLink("plink_test", "https://rzp.io/test"));
+
+        service.createPaymentLink(OWNER, INVOICE_ID);
+
+        assertThat(invoice.getRazorpayPaymentLinkId()).isEqualTo("plink_test");
+        assertThat(invoice.getRazorpayPaymentLinkUrl()).isEqualTo("https://rzp.io/test");
+        verify(invoiceDao).save(invoice);
+    }
+
+    @Test
+    @DisplayName("recordGatewayPayment ignores a re-delivered webhook for the same payment")
+    void recordGatewayPaymentIsIdempotent() {
+        when(invoicePaymentDao.findByRazorpayPaymentId("pay_123"))
+                .thenReturn(Optional.of(InvoicePayment.builder().razorpayPaymentId("pay_123").build()));
+
+        service.recordGatewayPayment(INVOICE_ID, new BigDecimal("500.00"), "pay_123");
+
+        verify(invoiceDao, never()).findById(any());
+        verify(invoicePaymentDao, never()).save(any());
+        verify(invoiceDao, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("recordGatewayPayment records the payment and settles the invoice")
+    void recordGatewayPaymentRecordsPaymentAndSettlesInvoice() {
+        Invoice invoice = payableInvoice(new BigDecimal("1000.00"));
+        invoice.setInvoiceTotal(new BigDecimal("1000.00"));
+        when(invoicePaymentDao.findByRazorpayPaymentId("pay_123")).thenReturn(Optional.empty());
+        when(invoiceDao.findById(INVOICE_ID)).thenReturn(Optional.of(invoice));
+        when(invoicePaymentDao.findByInvoiceIdOrderByReceivedOnAscIdAsc(INVOICE_ID))
+                .thenReturn(List.of(InvoicePayment.builder().amount(new BigDecimal("500.00")).tdsWithheld(BigDecimal.ZERO).build()));
+
+        service.recordGatewayPayment(INVOICE_ID, new BigDecimal("500.00"), "pay_123");
+
+        assertThat(invoice.getAmountPaid()).isEqualTo(new BigDecimal("500.00"));
+        assertThat(invoice.getBalanceDue()).isEqualTo(new BigDecimal("500.00"));
+        assertThat(invoice.getStatus()).isEqualTo(InvoiceStatus.PARTIALLY_PAID);
+        verify(invoicePaymentDao).save(any(InvoicePayment.class));
+        verify(invoiceDao).save(invoice);
+    }
+
+    @Test
     @DisplayName("dispatchDueScheduledSends sends and clears each due invoice, surviving one failure")
     void dispatchDueScheduledSendsProcessesAllAndSurvivesOneFailure() {
         Invoice ok = invoice(InvoiceStatus.SENT);
@@ -230,6 +306,12 @@ class InvoiceServiceImplTest {
     private static Invoice invoice(InvoiceStatus status) {
         return Invoice.builder().id(INVOICE_ID).status(status).invoiceNumber("INV-2026-0001").amountPaid(BigDecimal.ZERO)
                 .invoiceTotal(BigDecimal.ZERO).balanceDue(BigDecimal.ZERO).build();
+    }
+
+    private static Invoice payableInvoice(BigDecimal balanceDue) {
+        return Invoice.builder().id(INVOICE_ID).status(InvoiceStatus.SENT).invoiceNumber("INV-2026-0001").amountPaid(BigDecimal.ZERO)
+                .invoiceTotal(BigDecimal.ZERO).balanceDue(balanceDue)
+                .buyer(BuyerSnapshot.builder().name("Acme Brand").email("brand@example.com").build()).build();
     }
 
     private void authenticateAsOwner(Long creatorId) {

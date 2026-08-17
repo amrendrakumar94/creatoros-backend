@@ -99,4 +99,9 @@ public class InvoiceController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename("invoice-" + id + ".pdf").build().toString())
                 .body(pdf);
     }
+
+    @PostMapping("/{id}/payment-link")
+    public ResponseEntity<InvoiceDto> createPaymentLink(@PathVariable Long id) {
+        return ResponseEntity.ok(invoiceService.createPaymentLink(SecurityUtils.currentTenantId(), id));
+    }
 }
