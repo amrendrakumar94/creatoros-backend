@@ -37,8 +37,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll().requestMatchers("/api/v1/auth/**")
-                        .permitAll().requestMatchers("/api/v1/webhooks/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll().anyRequest().authenticated())
+                        .permitAll().requestMatchers("/api/v1/webhooks/**", "/api/v1/health").permitAll()
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class).build();
     }
 }
